@@ -5,14 +5,13 @@
 
 main()
 {
-	char c;
     char tempBuffer[INPUTBUFFERSIZE];
-    u32 i = 0;
+    u16 i = 0;
 
     prints("Group Descriptor Block: "); putc(GROUPDESCBLOCK + '0'); prints("\n");
 	getDiskBlock(GROUPDESCBLOCK, buffGroupDesc);
     pGroupDesc = (struct ext2_group_desc*) buffGroupDesc;
-    blockINodeTable = (u16)pGroupDesc->bg_inode_table;
+    blockINodeTable = (u16) pGroupDesc->bg_inode_table;
 
     prints("INode table Block: "); putc(blockINodeTable + '0'); prints("\n");
     getDiskBlock(blockINodeTable, buffINodeBlock);
@@ -51,7 +50,6 @@ main()
         }
     }
     prints("Henlo... I am completible!!!");
-    getc();
 }
 
 int prints(char *s)
