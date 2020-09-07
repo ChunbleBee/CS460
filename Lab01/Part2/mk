@@ -1,3 +1,5 @@
+rm mtximage
+cp ./cleanimage ./mtximage
 as86 -o bs.o bs.s
 bcc -c -ansi t.c
 ld86 -d bs.o t.o /usr/lib/bcc/libc.a

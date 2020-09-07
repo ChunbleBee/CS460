@@ -1,4 +1,3 @@
-#include <string.h>
 #include "types.h"
 #include "ext2.h"
 #include "globals.h"
@@ -8,48 +7,38 @@ main()
     char tempBuffer[INPUTBUFFERSIZE];
     u16 i = 0;
 
-    prints("Group Descriptor Block: "); putc(GROUPDESCBLOCK + '0'); prints("\n");
 	getDiskBlock(GROUPDESCBLOCK, buffGroupDesc);
     pGroupDesc = (struct ext2_group_desc*) buffGroupDesc;
     blockINodeTable = (u16) pGroupDesc->bg_inode_table;
-
-    prints("INode table Block: "); putc(blockINodeTable + '0'); prints("\n");
+    
     getDiskBlock(blockINodeTable, buffINodeBlock);
-    pINode = (struct ext2_inode*) buffINodeBlock;
-
-	prints("Reading data block of Root Directory Entry...\n");
-    prints("Press any key to continue...\n\n");
-    getc();
-
-    prints("Root Directory Contents:\n");
+    pINode = (struct ext2_inode*) buffINodeBlock + 1;
     for (i = 0; i < 12; i++)
     {
-        prints("Reading i_block: "); putc(i + '0'); prints("\n");
-        getc();
-
         if (pINode->i_block[i] != 0)
         {
-            getDiskBlock(pINode->i_block[i], buffDirEnt);
-            pDirEnt = (struct ext2_dir_entry_2 *) buffDirEnt;
-
-            while(pDirEnt < &buffDirEnt[BLOCKSIZE])
+            getDiskBlock((u16) pINode->i_block[i], buffDirEnt);
+            curDirPointer = buffDirEnt;
+            pDirEnt = (struct ext2_dir_entry_2 *) curDirPointer;
+            while(curDirPointer < buffDirEnt + BLOCKSIZE)
             {
                 strncpy(tempBuffer, pDirEnt->name, pDirEnt->name_len);
                 tempBuffer[pDirEnt->name_len] = '\0';
 
                 prints(tempBuffer);
-
                 if (strcmp(tempBuffer, "boot") == 0)
                 {
-                    prints("\t---Boot directory found!");
+                    bootInode = pDirEnt->inode;
+                    prints(" - boot found.");
                 }
-                prints("\n");
-
-                pDirEnt = (u8 *) pDirEnt + pDirEnt->rec_len;
+                prints("\n\r");
+                
+                curDirPointer += pDirEnt->rec_len;
+                pDirEnt = (struct ext2_dir_entry_2 *) curDirPointer;
             }
         }
     }
-    prints("Henlo... I am completible!!!");
+    prints("completed.\n");
 }
 
 int prints(char *s)
@@ -87,7 +76,11 @@ int gets(char *s)
 	s[index] = '\0';
 }
 
-int getDiskBlock(u16 blk, u8 *buf)
+int getDiskBlock(u16 blk, u8* buf)
 {
-    readfd(((2*blk)/CYLINDERS), (((2*blk)%CYLINDERS)/TRACKS), (((2*blk)%CYLINDERS)%TRACKS), buf);
+    readfd(
+        (2*blk)/CYLINDERS,
+        ((2*blk)%CYLINDERS)/TRACKS,
+        ((2*blk)%CYLINDERS)%TRACKS,
+        buf);
 }
