@@ -6,51 +6,52 @@
 main()
 {
 	char c;
-    char tempBuffer[65];
+    char tempBuffer[INPUTBUFFERSIZE];
     u32 i = 0;
 
-    tempBuffer[0] = '\t';
-
-	prints("read block 2 to get group descriptor information...\n\r");
+    prints("Group Descriptor Block: "); putc(GROUPDESCBLOCK + '0'); prints("\n");
 	getDiskBlock(GROUPDESCBLOCK, buffGroupDesc);
     pGroupDesc = (struct ext2_group_desc*) buffGroupDesc;
     groupINodeTable = (u16)pGroupDesc->bg_inode_table;
 
-	prints("inode_block="); putc(groupINodeTable + '0'); prints("\n\r");
-    prints("Press a key to continue...");
-    getc();
-
-	prints("Reading INode information block to obtain root INode...\n\r");
-    getDiskBlock(groupINodeTable, buffINodeBlock);
+    prints("INode table Block: "); putc(groupINodeTable + '0'); prints("\n");
+    getDiskBlock(blockINodeTable, buffINodeBlock);
     pINode = (struct ext2_inode*) buffINodeBlock;
 
-	prints("Reading data block of Root Directory Entry...\n\r");
-    prints("Root Directory Contents:\n\r");
+	prints("Reading data block of Root Directory Entry...\n");
+    prints("Press any key to continue...\n\n");
+    getc();
 
+    prints("Root Directory Contents:\n");
     for (i = 0; i < 12; i++)
     {
+        prints("Reading i_block: "); putc(i + '0'); prints("\n");
+        getc();
+
         if (pINode->i_block[i] != 0)
         {
             getDiskBlock(pINode->i_block[i], buffDirEnt);
             pDirEnt = (struct ext2_dir_entry_2 *) buffDirEnt;
 
-            while((u8 *) pDirEnt < &buffDirEnt[BLOCKSIZE])
+            while(pDirEnt < &buffDirEnt[BLOCKSIZE])
             {
                 strncpy(tempBuffer, pDirEnt->name, pDirEnt->name_len);
-                tempBuffer[pDirEnt->name_len] = 0;
-                putc('\t'); prints(tempBuffer); prints("\n\r");
+                tempBuffer[pDirEnt->name_len] = '\0';
+
+                prints(tempBuffer);
 
                 if (strcmp(tempBuffer, "boot") == 0)
                 {
-                    prints("\t^---Boot directory found!");
+                    prints("\t---Boot directory found!");
                 }
+                prints("\n");
 
-                getc();
                 pDirEnt = (u8 *) pDirEnt + pDirEnt->rec_len;
             }
         }
     }
     prints("Henlo... I am completible!!!");
+    getc();
 }
 
 int prints(char *s)
@@ -58,6 +59,10 @@ int prints(char *s)
 	while (*s != '\0')
 	{
 		putc(*s);
+        if (*s == '\n')
+        {
+            putc('\r');
+        }
 		s++;
 	}
 }
@@ -67,7 +72,7 @@ int gets(char *s)
 	int index = 0;
 	char next;
 
-	while(index < 64)
+	while(index < INPUTBUFFERSIZE)
 	{
 		next = getc();
 		putc(next);

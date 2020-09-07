@@ -8,4 +8,4 @@ u8 buffDirEnt[BLOCKSIZE];
 
 int color = 0x0A;
 u16 curINodeBlock;
-u16 groupINodeTable;
+u16 blockINodeTable;
