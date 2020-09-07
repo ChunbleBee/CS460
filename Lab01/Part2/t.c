@@ -12,9 +12,9 @@ main()
     prints("Group Descriptor Block: "); putc(GROUPDESCBLOCK + '0'); prints("\n");
 	getDiskBlock(GROUPDESCBLOCK, buffGroupDesc);
     pGroupDesc = (struct ext2_group_desc*) buffGroupDesc;
-    groupINodeTable = (u16)pGroupDesc->bg_inode_table;
+    blockINodeTable = (u16)pGroupDesc->bg_inode_table;
 
-    prints("INode table Block: "); putc(groupINodeTable + '0'); prints("\n");
+    prints("INode table Block: "); putc(blockINodeTable + '0'); prints("\n");
     getDiskBlock(blockINodeTable, buffINodeBlock);
     pINode = (struct ext2_inode*) buffINodeBlock;
 
