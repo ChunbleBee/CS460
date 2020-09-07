@@ -17,7 +17,7 @@
         !  read boot BLOCK to [0x9000,0]     
         !---------------------------------------------------
         xor  dx,dx          ! drive 0, head 0
-        xor  cx,cx          ! cyl 0    sector 0        
+        xor  cx,cx          ! cyl 0    sector 0
         incb cl             ! cyl 0, sector 1
         mov  ax, #0x0202    ! READ 1 block
         int  0x13
