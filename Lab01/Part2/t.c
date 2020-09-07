@@ -1,16 +1,56 @@
+#include <string.h>
 #include "types.h"
 #include "ext2.h"
 #include "globals.h"
 
-void strncpy(char* dest, char* source, u32 bytesToCopy)
+main()
 {
-    u32 index = 0;
-    while(index < bytesToCopy && source[index] != '\0')
+	char c;
+    char tempBuffer[65];
+    u32 i = 0;
+
+    tempBuffer[0] = '\t';
+
+	prints("read block 2 to get group descriptor information...\n\r");
+	getDiskBlock(GROUPDESCBLOCK, buffGroupDesc);
+    pGroupDesc = (struct ext2_group_desc*) buffGroupDesc;
+    groupINodeTable = (u16)pGroupDesc->bg_inode_table;
+
+	prints("inode_block="); putc(groupINodeTable + '0'); prints("\n\r");
+    prints("Press a key to continue...");
+    getc();
+
+	prints("Reading INode information block to obtain root INode...\n\r");
+    getDiskBlock(groupINodeTable, buffINodeBlock);
+    pINode = (struct ext2_inode*) buffINodeBlock;
+
+	prints("Reading data block of Root Directory Entry...\n\r");
+    prints("Root Directory Contents:\n\r");
+
+    for (i = 0; i < 12; i++)
     {
-        dest[index] = source[index];
-        index++;
+        if (pINode->i_block[i] != 0)
+        {
+            getDiskBlock(pINode->i_block[i], buffDirEnt);
+            pDirEnt = (struct ext2_dir_entry_2 *) buffDirEnt;
+
+            while((u8 *) pDirEnt < &buffDirEnt[BLOCKSIZE])
+            {
+                strncpy(tempBuffer, pDirEnt->name, pDirEnt->name_len);
+                tempBuffer[pDirEnt->name_len] = 0;
+                putc('\t'); prints(tempBuffer); prints("\n\r");
+
+                if (strcmp(tempBuffer, "boot") == 0)
+                {
+                    prints("\t^---Boot directory found!");
+                }
+
+                getc();
+                pDirEnt = (u8 *) pDirEnt + pDirEnt->rec_len;
+            }
+        }
     }
-    dest[index] = '\0';
+    prints("Henlo... I am completible!!!");
 }
 
 int prints(char *s)
@@ -47,44 +87,4 @@ int gets(char *s)
 int getDiskBlock(u16 blk, u8 *buf)
 {
     readfd(((2*blk)/CYLINDERS), (((2*blk)%CYLINDERS)/TRACKS), (((2*blk)%CYLINDERS)%TRACKS), buf);
-}
-
-main()
-{
-	char    c, tempBuffer[65];
-
-	prints("read block 2 to get group descriptor information...\n\r");
-	getDiskBlock(GROUPDESCBLOCK, buffGroupDesc);
-    pGroupDesc = (struct ext2_group_desc*) buffGroupDesc;
-    groupINodeTable = (u16)pGroupDesc->bg_inode_table;
-
-	prints("inode_block="); putc(groupINodeTable + '0'); prints("\n\r");
-    prints("Press a key to continue...");
-    getc();
-
-	prints("Reading INode information block to obtain root INode...\n\r");
-    getDiskBlock(groupINodeTable, buffINodeBlock);
-    pINode = (struct ext2_inode*) buffINodeBlock;
-
-	prints("Reading data block of Root Directory Entry...\n\r");
-    prints("Root Directory Contents:\n");
-    tempBuffer[0] = '\t';
-
-    for (u32 i = 0; i < 12; i++)
-    {
-        if ((u16)pINode->i_block[i] != 0)
-        {
-            getDiskBlock((u16)pINode->i_block[i], buffDirEnt);
-            u8* pInit = buffDirEnt;
-            u8* pNext = buffDirEnt;
-
-            while((pNext - pInit) < BLOCKSIZE)
-            {
-                pDirEnt = (struct ext2_dir_entry_2*) pNext;
-                strncpy(&tempBuffer[1], pDirEnt->name, pDirEnt->name_len);
-                prints(tempBuffer);
-                pNext = pNext + pDirEnt->rec_len;
-            }
-        }
-    }
 }
