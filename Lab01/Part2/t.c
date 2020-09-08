@@ -59,12 +59,11 @@ int main()
     pGroupDesc = ioBuffer01;
     INodeTableBlock = (u16) pGroupDesc->bg_inode_table;
     getDiskBlock(INodeTableBlock, ioBuffer01);
-    prints(stepPassed);
     pINode = (IndexNode *) ioBuffer01 + 1;
     for (index = 0; index < 2; index++)
     {
         BootINodes[index] = search(pINode, BootNames[index]) - 1;
-        prints(stepPassed);
+
         if (BootINodes[index] < 0)
         {
             error();
@@ -77,17 +76,14 @@ int main()
     {
         getDiskBlock((u16) pINode->i_block[12], ioBuffer02);
         pIndirect = (u32 *) ioBuffer02;
-        prints("-\n\r");
     }
 
     setes(0x1000);
-    prints(stepPassed);
     for (index = 0; index < 12; index++)
     {
         getDiskBlock((u16)pINode->i_block[index], NULL);
         inces();
     }
-    prints(stepPassed);
     if ((u16)pINode->i_block[12] != NULL)
     {
         while(*pIndirect != NULL)
@@ -97,7 +93,7 @@ int main()
             pIndirect++;
         }
     }
-    prints(stepPassed);
+    prints(stepPassed); //Okay, so this shit breaks when this is gone????
 }
 
 int prints(char *s)
@@ -108,21 +104,21 @@ int prints(char *s)
 	}
 }
 
-// int gets(char *s)
-// {
-//     char next = '\0';
-//     while (TRUE)
-//     {
-//         next = getc();
-//         if (next = '\r')
-//         {
-//             break;
-//         }
-//         *s = next;
-//         s++;
-//     }
-//     *s = '\0';
-// }
+int gets(char *s)
+{
+    char next = '\0';
+    while (TRUE)
+    {
+        next = getc();
+        if (next = '\r')
+        {
+            break;
+        }
+        *s = next;
+        s++;
+    }
+    *s = '\0';
+}
 
 int getDiskBlock(u16 block, u8* buffer)
 {
