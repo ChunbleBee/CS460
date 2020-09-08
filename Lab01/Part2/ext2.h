@@ -1,4 +1,4 @@
-struct ext2_inode {
+typedef struct ext2_inode {
 	u16	i_mode;		/* File mode */
 	u16	i_uid;		/* Owner Uid */
 	u32	i_size;		/* Size in bytes */
@@ -13,9 +13,9 @@ struct ext2_inode {
         u32     dummy;
 	u32	i_block[15];    /* Pointers to blocks */
         u32     pad[7];         /* inode size MUST be 128 bytes */
-};
+} IndexNode;
 
-struct ext2_group_desc
+typedef struct ext2_group_desc
 {
 	u32	bg_block_bitmap;		/* Blocks bitmap block */
 	u32	bg_inode_bitmap;		/* Inodes bitmap block */
@@ -25,12 +25,12 @@ struct ext2_group_desc
 	u16	bg_used_dirs_count;	/* Directories count */
 	u16	bg_pad;
 	u32	bg_reserved[3];
-};
+} GroupDescriptor;
 
-struct ext2_dir_entry_2 {
+typedef struct ext2_dir_entry_2 {
 	u32	inode;			/* Inode number */
 	u16	rec_len;		/* Directory entry length */
 	u8	name_len;		/* Name length */
 	u8	file_type;
 	char	name[255];      	/* File name */
-};
+} DirectoryEntry;
