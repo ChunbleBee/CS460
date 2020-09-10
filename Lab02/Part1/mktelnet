@@ -15,13 +15,3 @@ echo then enter inputs from the telnet terminal
 echo ------------------------------------------------------
 qemu-system-arm -M versatilepb -m 128M -kernel t.bin -nographic \
 -serial telnet:localhost:1234,server
-
-
-
-
- 
-
-
-
-
-

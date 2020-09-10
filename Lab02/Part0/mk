@@ -1,0 +1,7 @@
+arm-none-eabi-as -o ts.o c2.1.s
+arm-none-eabi-ld -T t.ld -o t.elf ts.o
+arm-none-eabi-objcopy -O binary t.elf t.bin
+rm *.o *.elf
+echo "Ready to run? Press a key to continue"
+read
+qemu-system-arm -M versatilepb -m 128M -kernel t.bin -serial mon:stdio

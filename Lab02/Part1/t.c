@@ -13,6 +13,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
+#define TRUE 1
+#define FALSE 0
+#define NULL ((void *) 0)
 
 typedef unsigned char  u8;
 typedef unsigned short u16;
@@ -47,31 +50,37 @@ UART *up;
 
 int main()
 {
-  int i;
-  int size = sizeof(int);
-  char string[32]; 
-  char line[128]; 
+    int i;
+    int size = sizeof(int);
+    char string[32]; 
+    char line[128]; 
 
-  N = 10;
+    N = 10;
 
-  uart_init();
+    uart_init();
 
-  up = &uart[0];
-  uprints(up, "Enter lines from UART terminal, enter quit to exit\n\r");
-  
-  while(1){
-    ugets(up, string);
-    uprints(up, "    ");
-    if (strcmp(string, "quit")==0)
-       break;
-    uprints(up, string);  uprints(up, "\n\r");
-  }
+    up = &uart[0];
+    uprints(up, "Enter lines from UART terminal, enter quit to exit\n\r");
+
+    while (TRUE)
+    {
+        ugets(up, string);
+        uprints(up, "    ");
+        if (strcmp(string, "quit") == 0)
+        {
+            break;
+        }
+        uprints(up, string);  uprints(up, "\n\r");
+    }
 
 
-  uprints(up, "Compute sum of array\n\r");
-  sum = 0;
-  for (i=0; i<N; i++)
-    sum += v[i];
-  uputc(up, (sum/10)+'0'); uputc(up, (sum%10)+'0');
-  uprints(up, "\n\rEND OF RUN\n\r");
+    uprints(up, "Compute sum of array\n\r");
+    sum = 0;
+    for (i=0; i<N; i++)
+    {
+        sum += v[i];
+    }
+
+    uputc(up, (sum/10)+'0'); uputc(up, (sum%10)+'0');
+    uprints(up, "\n\rEND OF RUN\n\r");
 }
