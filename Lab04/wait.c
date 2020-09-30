@@ -33,7 +33,7 @@ int kexit(int exitValue)
     // 3. record exitValue in process exitcode
     // 4. Become a ZOMBIE process
     // 5. Wakeup parent process, and, if necessary, the init process in P1
-    // 6. Switch processes.
+    // 6. Switch processes
     Proc * p1           = &proc[1];
     Proc * p1Child      = p1->child;
     Proc * curOrphan    = running->child;
@@ -63,5 +63,26 @@ int kexit(int exitValue)
 
 int kwait(int *status)
 {
-  // kwait function as in class notes
+    Proc * curChild = running->child;
+
+    if (curChild == NULL)
+    {
+        return -1; // Error, no children.
+    }
+
+    while (curChild != NULL)
+    {
+        if (curChild->status == ZOMBIE)
+        {
+            int procID = curChild->pid;
+            *status = curChild->exitCode;
+            curChild->status = FREE;
+            enqueue(&freelist, curChild);
+            return procID;
+        }
+
+        curChild = curChild->sibling;
+    }
+
+    ksleep(running);
 }
