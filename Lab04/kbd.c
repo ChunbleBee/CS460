@@ -15,11 +15,11 @@
 
 int release;
 
-typedef volatile struct kbd{
+typedef volatile struct kbd {
   char *base;
   char buf[128];
   int head, tail, data, room;
-}KBD;
+} KBD;
 
 volatile KBD kbd;
 

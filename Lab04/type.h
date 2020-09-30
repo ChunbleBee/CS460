@@ -55,7 +55,7 @@ typedef unsigned int   u32;
 
 #define  printf  kprintf
  
-typedef struct proc{
+typedef struct proc {
   struct proc *next;
   int    *ksp;
 
@@ -72,4 +72,4 @@ typedef struct proc{
   int    exitCode;
 
   int    kstack[SSIZE];
-}PROC;
+} PROC;

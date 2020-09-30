@@ -2,7 +2,7 @@ int color;
 
 #include "type.h"
 #include "string.c"
-// #include "queue.c" 
+// #include "queue.c"
 #include "vid.c"
 #include "kbd.c"
 #include "exceptions.c"
