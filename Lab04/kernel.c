@@ -10,6 +10,8 @@ int kwakeup(int event);
 int ksleep(int event);
 PROC * kfork(int func, int priority);
 
+#include "wait.c"
+
 int printSiblingList(char *listname, PROC *list)
 {
     kprintf(listname);
@@ -20,10 +22,8 @@ int printSiblingList(char *listname, PROC *list)
         kprintf("[ %d, %d ] -> ", list->pid, list->ppid);
         list = list->sibling;
     }
-    kprintf(" NULL\n");
+    kprintf("NULL\n");
 }
-
-#include "wait.c"
 
 int init()
 {
