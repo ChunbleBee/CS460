@@ -10,6 +10,19 @@ int kwakeup(int event);
 int ksleep(int event);
 PROC * kfork(int func, int priority);
 
+int printSiblingList(char *listname, PROC *list)
+{
+    kprintf(listname);
+    kprintf(": ");
+
+    while (list != NULL)
+    {
+        kprintf("[ %d, %d ] -> ", list->pid, list->ppid);
+        list = list->sibling;
+    }
+    kprintf(" NULL\n");
+}
+
 #include "wait.c"
 
 int init()
@@ -75,13 +88,19 @@ int body()
 
         printList("freeList  ", freeList);
         printList("readyQueue", readyQueue);
+        kprintf("Running Process ID: %d\nParent Process ID: %d\n",
+            running->pid,
+            running->ppid);
+        printSiblingList("Children: ", running->child);
 
-        kprintf("proc %d running\n[ switch | fork | exit | sleep | wakeup | wait ] : ", running->pid);
+        kprintf("[ switch | fork | exit | sleep | wakeup | wait ] : ", running->pid);
         kgets(cmd);
         printf("\n");
 
         if (strcmp(cmd, "switch") == 0)
+        {
             tswitch();
+        }
 
         if (strcmp(cmd, "fork") == 0)
             kfork((int)body, 1);

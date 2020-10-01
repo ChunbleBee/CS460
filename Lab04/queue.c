@@ -13,7 +13,12 @@ extern PROC *freeList, *readyQueue, *running;
 
 PROC *get_proc(PROC **list)  // called as get_proc(&freeList)
 {
-  // return a free PROC from freeList
+  if (freeList == NULL)
+  {
+    return NULL;
+  }
+  PROC *newFreeProcess = freeList;
+  freeList = newFreeProcess->sibling;
 }
    
 int put_proc(PROC **list, PROC *p)   // called as put_proc(&feeList, p)
@@ -33,6 +38,14 @@ PROC *dequeue(PROC **queue)         // called as dequeue(&readyQueue)
 
 int printList(char *listname, PROC *list)
 {
-  // print link list as      listname = ...... NULL
+    kprintf(listname);
+    kprintf(": ");
+
+    while (list != NULL)
+    {
+        kprintf("[ %d, %d ] -> ", list->pid, list->ppid);
+        list = list->sibling;
+    }
+    kprintf(" NULL\n");
 }
 

@@ -15,6 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
 
 int kprintf(char *, ...);
+
 int strlen(char *s)
 {
   int i = 0;
@@ -53,6 +54,7 @@ int atoi(char *s)
   //kprintf("v=%d\n", v);
   return v;
 }
+
 int geti()
 {
   char s[16];

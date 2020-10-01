@@ -7,16 +7,18 @@ PROC *kfork(int func, int priority)
     int i;
     PROC *p = get_proc(&freeList);;
 
-    if (p==0)
+    if (p == NULL)
     {
         printf("no more PROC, kfork failed\n");
         return 0;
     }
 
-    p->status = READY;
-    p->priority = priority;
-    p->ppid = running->pid;
-    p->parent = running;
+    p->status       = READY;
+    p->priority     = priority;
+    p->ppid         = running->pid;
+    p->parent       = running;
+    p->sibling      = running->child;
+    running->child  = p;
 
     // set kstack to resume to body
     // stack = r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r14
@@ -24,8 +26,9 @@ PROC *kfork(int func, int priority)
     for (i=1; i<15; i++)
         p->kstack[SSIZE-i] = 0;
 
-    p->kstack[SSIZE-1] = (int)func;  // in dec reg=address ORDER !!!
-    p->ksp = &(p->kstack[SSIZE-14]);
+    p->kstack[SSIZE-1]  = (int)func;  // in dec reg=address ORDER !!!
+    p->ksp              = &(p->kstack[SSIZE-14]);
+
     enqueue(&readyQueue, p);
     printf("proc %d kforked a child %d\n", running->pid, p->pid);
 
@@ -71,14 +74,22 @@ int kexit(int exitValue)
 
     int CPSRRegValue = int_off();
 
+    if (running == &proc[1])
+    {
+        kprintf("Can't kill process 1... Kernel panic?\n");
+        return -1;
+    }
+
     if (curOrphan != NULL)
     {
         while (curOrphan != NULL)
         {
             curOrphan->parent   = p1;
+            curOrphan->status   = ZOMBIE;
             prevOrphan          = curOrphan;
             curOrphan           = curOrphan->sibling;
         }
+
         prevOrphan->sibling = p1Child;
         p1->child           = running->child;
         running->child      = NULL;
