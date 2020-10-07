@@ -57,6 +57,19 @@ void timer_init()
     }
 }
 
+void print_timer_queue()
+{
+    ProcTimerNode * cur = head;
+
+    while(cur != NULL)
+    {
+        kprintf("[proc: #%d, sec: %d] -> ", cur->process->pid, cur->timeleft);
+        cur = cur->next;
+    }
+
+    kprintf(" NULL\n");
+}
+
 void timer_handler(int n)
 {
     int i;
@@ -72,10 +85,14 @@ void timer_handler(int n)
     {
         pTimer->tick = 0;
         pTimer->ss++;
-        print_timer_queue();
+
+        pTimer->clock[7] = '0' + (pTimer->ss%10);   // Setting Seconds ones place
+        pTimer->clock[6] = '0' + (pTimer->ss/10);   // Setting seconds tens place
+
 
         if (head != NULL)
         {
+            print_timer_queue();
             head->timeleft--;
 
             if (head->timeleft <= 0)
@@ -86,7 +103,7 @@ void timer_handler(int n)
                 if (head == NULL) timer_stop(0);
 
                 // Set it's priority to highest
-                interruptor->process->priority = __INT_MAX__;
+                interruptor->process->priority = -20;
 
                 // Wake it up
                 kwakeup(interruptor->process);
@@ -104,24 +121,25 @@ void timer_handler(int n)
             pTimer->ss = 0;
             pTimer->mm++;
 
+            pTimer->clock[4] = '0' + (pTimer->mm%10);   // Setting minutes ones place
+            pTimer->clock[3] = '0' + (pTimer->mm/10);   // Setting minutes tens place
+
             if (pTimer->mm == 60)
             {
                 pTimer->mm = 0;
                 pTimer->hh++;
+
+                pTimer->clock[1] = '0' + (pTimer->hh%10);   // Setting hour ones place
+                pTimer->clock[0] = '0' + (pTimer->hh/10);   // Setting hour tens place
     
                 if (pTimer->hh == 24)
                 {
                     pTimer->hh = 0;
                 }
+
             }
         }
     }
-    pTimer->clock[7] = '0' + (pTimer->ss%10);   // Setting Seconds ones place
-    pTimer->clock[6] = '0' + (pTimer->ss/10);   // Setting seconds tens place
-    pTimer->clock[4] = '0' + (pTimer->mm%10);   // Setting minutes ones place
-    pTimer->clock[3] = '0' + (pTimer->mm/10);   // Setting minutes tens place
-    pTimer->clock[1] = '0' + (pTimer->hh%10);   // Setting hour ones place
-    pTimer->clock[0] = '0' + (pTimer->hh/10);   // Setting hour tens place
 
     timer_clearInterrupt(n);
 }
@@ -141,7 +159,7 @@ int timer_clearInterrupt(int n)
     if (n < 0 || n > 4)
         return;
     
-    Timer * pTimer = &timer[n];
+    Timer * pTimer = &timers[n];
     *(pTimer->base+TINTCLR) = 0xFFFFFFFF;
 }
 
@@ -150,7 +168,7 @@ void timer_stop(int n)
     if (n < 0 || n > 4)
         return;
 
-    Timer pTimer = &timers[n];
+    Timer * pTimer = &(timers[n]);
     *(pTimer->base+TCNTL) &= 0x7F;
 }
 

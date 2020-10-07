@@ -88,3 +88,11 @@ typedef struct timer
     char clock[16]          // Displays the current clock of the timer
 }
 Timer;
+
+typedef struct PROCTIMERNODE
+{
+    struct PROCTIMERNODE * next;
+    PROC * process;
+    int timeleft;
+}
+ProcTimerNode;

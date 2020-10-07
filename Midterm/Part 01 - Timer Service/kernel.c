@@ -94,7 +94,7 @@ int body()
             running->ppid);
         printSiblingList("Children: ", running->child);
 
-        kprintf("[ switch | fork | exit | sleep | wakeup | wait ] : ", running->pid);
+        kprintf("[ switch | fork | exit | sleep | wakeup | wait | timed ] : ", running->pid);
         kgets(cmd);
         printf("\n");
 
@@ -132,6 +132,13 @@ int body()
             int exitCode  = 0;
             int procID = kwait(&exitCode);
             kprintf("Process #%d exited with code %d\n", exitCode, procID);
+        }
+
+        if (strcmp(cmd, "timed") == 0)
+        {
+            kprintf("Seconds to sleep for: ");
+            kgets(cmd);
+            timer_enqueue(running, atoi(cmd));
         }
     }
 }
