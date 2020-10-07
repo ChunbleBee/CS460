@@ -24,10 +24,35 @@ void IRQ_handler()
 {
    int vicstatus, sicstatus;
    int ustatus, kstatus;
+   int i;
 
    // read VIC status register to find out which interrupt
    vicstatus = VIC_STATUS; // VIC_STATUS=0x10140000=status reg
-   sicstatus = SIC_STATUS;  
+   sicstatus = SIC_STATUS;
+
+   if (vicstatus & (1 << 4))
+   {
+      if (*((&timers[0])->base+TVALUE) == 0)
+      {
+         timer_handler(0);
+      }
+      if (*((&timers[1])->base+TVALUE) == 0)
+      {
+         timer_handler(1);
+      }
+   }
+
+   if (vicstatus & (1 << 5))
+   {
+      if (*((&timers[2])->base+TVALUE) == 0)
+      {
+         timer_handler(2);
+      }
+      if (*((&timers[3])->base+TVALUE) == 0)
+      {
+         timer_handler(3);
+      }
+   }
    //kprintf("vicstatus=%x sicstatus=%x\n", vicstatus, sicstatus);
    if (vicstatus & 0x80000000){
       if (sicstatus & 0x08){
@@ -53,8 +78,10 @@ int main()
  
    kprintf("Welcome to WANIX in Arm\n");
    timer_init();
+   timer_start(0);
    init();
    kfork((int)body, 1);
+
    while(1){
       if (readyQueue)
          tswitch();

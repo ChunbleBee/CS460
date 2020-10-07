@@ -1,5 +1,5 @@
-volatile Timer timers[4]; //ARM contains only 4 timers
-
+ProcTimerNode nodes[NPROC];
+ProcTimerNode * freed;
 ProcTimerNode * head;
 
 void timer_enqueue(PROC * process, int time)
@@ -15,17 +15,16 @@ void timer_enqueue(PROC * process, int time)
     }
 
 
-    ProcTimerNode * new = (ProcTimerNode *)malloc(sizeof(ProcTimerNode));
+    ProcTimerNode * new = freed;
+    freed = freed->next;
+
     new->next = NULL;
     new->process = process;
     new->timeleft = time;
 
-    new->process->status = SLEEP;
-
     if (prev == NULL)
     {
         head = new;
-        timer_start(0);
     }
     else
     {
@@ -35,14 +34,56 @@ void timer_enqueue(PROC * process, int time)
     ksleep(process);
 }
 
+void timer_dequeue(int n)
+{
+    kprintf("\nSwitching to first process in timer list..\n");
+    // Dequeue the process from the timer interrupt list.
+    int prevPriority;
+    ProcTimerNode * interruptor = head;
+    head = head->next;
+
+    // Set it's priority to highest
+    prevPriority = interruptor->process->priority;
+    interruptor->process->priority = __INT16_MAX__;
+
+    // Wake it up
+    kwakeup(interruptor->process);
+    interruptor->process->priority = prevPriority;
+
+    // free the node
+    initialize_timer_node(interruptor);
+    timer_clearInterrupt(n);
+
+    // switch processes
+    tswitch();
+}
+
+void initialize_timer_node(ProcTimerNode * node)
+{
+    node->next = freed;
+    node->process = NULL;
+    node->timeleft = -1;
+    freed = node;
+}
+
 void timer_init()
 {
     int i;
     Timer *pTimer;
+
+    for (i = 0; i < NPROC; i++)
+    {
+        initialize_timer_node(&nodes[i]);
+    }
+
+    (&timers[0])->base = (u32 *)(TIMER0_BASE_ADDR + 0x0000);
+    (&timers[1])->base = (u32 *)(TIMER0_BASE_ADDR + 0x0020);
+    (&timers[2])->base = (u32 *)(TIMER0_BASE_ADDR + 0x1000);
+    (&timers[3])->base = (u32 *)(TIMER0_BASE_ADDR + 0x1020);
+
     for (i = 0; i < 4; i++)
     {
         pTimer = &timers[i];
-        pTimer->base = (u32 *)(TIMER0_BASE_ADDR + ((i/2 > 0) ? 0x1000 : 0) - ((i%2 == 0) ? 0x20 : 0));
         *(pTimer->base+TLOAD)   = 0x0;
         *(pTimer->base+TVALUE)  = 0xFFFFFFFF;
         *(pTimer->base+TMIS)    = 0x0;
@@ -53,14 +94,13 @@ void timer_init()
         pTimer->hh = 0;
         pTimer->mm = 0;
         pTimer->ss = 0;
-        strcpy((char *)pTimer->clock, "00:00:00");
     }
 }
 
 void print_timer_queue()
 {
     ProcTimerNode * cur = head;
-
+    kprintf("\n");
     while(cur != NULL)
     {
         kprintf("[proc: #%d, sec: %d] -> ", cur->process->pid, cur->timeleft);
@@ -72,10 +112,9 @@ void print_timer_queue()
 
 void timer_handler(int n)
 {
-    int i;
-    Timer * pTimer = NULL;
+    Timer * pTimer;
 
-    if (n < 0 || n > 4)
+    if (n < 0 || n >= 4)
         return;
 
     pTimer = &timers[n];
@@ -86,67 +125,31 @@ void timer_handler(int n)
         pTimer->tick = 0;
         pTimer->ss++;
 
-        pTimer->clock[7] = '0' + (pTimer->ss%10);   // Setting Seconds ones place
-        pTimer->clock[6] = '0' + (pTimer->ss/10);   // Setting seconds tens place
-
-
         if (head != NULL)
         {
-            print_timer_queue();
             head->timeleft--;
-
-            if (head->timeleft <= 0)
-            {
-                // Dequeue the process from the timer interrupt list.
-                ProcTimerNode * interruptor = head;
-                head = head->next;
-                if (head == NULL) timer_stop(0);
-
-                // Set it's priority to highest
-                interruptor->process->priority = -20;
-
-                // Wake it up
-                kwakeup(interruptor->process);
-
-                // Delete the node.
-                free(interruptor);
-
-                // tswitch()
-                tswitch();
-            }
+            print_timer_queue();
         }
-
         if (pTimer->ss == 60)
         {
             pTimer->ss = 0;
-            pTimer->mm++;
-
-            pTimer->clock[4] = '0' + (pTimer->mm%10);   // Setting minutes ones place
-            pTimer->clock[3] = '0' + (pTimer->mm/10);   // Setting minutes tens place
-
-            if (pTimer->mm == 60)
-            {
-                pTimer->mm = 0;
-                pTimer->hh++;
-
-                pTimer->clock[1] = '0' + (pTimer->hh%10);   // Setting hour ones place
-                pTimer->clock[0] = '0' + (pTimer->hh/10);   // Setting hour tens place
-    
-                if (pTimer->hh == 24)
-                {
-                    pTimer->hh = 0;
-                }
-
-            }
         }
     }
 
-    timer_clearInterrupt(n);
+    if (head != NULL && head->timeleft <= 0)
+    {
+        timer_dequeue(n);
+    }
+    else
+    {
+        timer_clearInterrupt(n);
+    }
+    
 }
 
 void timer_start(int n)
 {
-    if (n < 0 || n > 4)
+    if (n < 0 || n >= 4)
         return;
 
     Timer * pTimer = &timers[n];
@@ -156,7 +159,7 @@ void timer_start(int n)
 
 int timer_clearInterrupt(int n)
 {
-    if (n < 0 || n > 4)
+    if (n < 0 || n >= 4)
         return;
     
     Timer * pTimer = &timers[n];
@@ -165,7 +168,7 @@ int timer_clearInterrupt(int n)
 
 void timer_stop(int n)
 {
-    if (n < 0 || n > 4)
+    if (n < 0 || n >= 4)
         return;
 
     Timer * pTimer = &(timers[n]);

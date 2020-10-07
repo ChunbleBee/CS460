@@ -95,4 +95,6 @@ typedef struct PROCTIMERNODE
     PROC * process;
     int timeleft;
 }
-ProcTimerNode;
+ProcTimerNode;;
+
+volatile Timer timers[4]; //ARM contains only 4 timers
