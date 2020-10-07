@@ -44,13 +44,15 @@ int main()
    fbuf_init();
    kbd_init();
    
-   // enable VIC for IRQ 31
-   VIC_INTENABLE |= (1<<31); // SIC to VIC's IRQ31
+   VIC_INTENABLE |= (1 << 4);    // enable timers 1, 2
+   VIC_INTENABLE |= (1 << 5);    // Enable timers 3, 4
+   VIC_INTENABLE |= (1 << 31);   // SIC to VIC's IRQ31
    // enable KBD IRQ 
-   SIC_ENSET = 1<<3;  // KBD int=3 on SIC
-   SIC_PICENSET = 1<<3;  // KBD int=3 on SIC
+   SIC_ENSET = 1 << 3;  // KBD int=3 on SIC
+   SIC_PICENSET = 1 << 3;  // KBD int=3 on SIC
  
    kprintf("Welcome to WANIX in Arm\n");
+   timer_init();
    init();
    kfork((int)body, 1);
    while(1){

@@ -41,7 +41,7 @@ int ksleep(int event)
     running->event = event;         // Set the event to wake for the running process
     running->status = SLEEP;        // Set the status of running process to sleeping
     tswitch();                      // Switch running process
-    int_on(CPSRRegValue);            // Turn interrupts back on.
+    int_on(CPSRRegValue);           // Turn interrupts back on.
 }
 
 int kwakeup(int event)

@@ -1,5 +1,39 @@
-extern Timer;
 volatile Timer timers[4]; //ARM contains only 4 timers
+
+ProcTimerNode * head;
+
+void timer_enqueue(PROC * process, int time)
+{
+    ProcTimerNode * cur = head, * prev = NULL;
+    if (process == NULL || time <= 0)
+        return;
+    
+    while(cur != NULL)
+    {
+        prev = cur;
+        cur = cur->next;
+    }
+
+
+    ProcTimerNode * new = (ProcTimerNode *)malloc(sizeof(ProcTimerNode));
+    new->next = NULL;
+    new->process = process;
+    new->timeleft = time;
+
+    new->process->status = SLEEP;
+
+    if (prev == NULL)
+    {
+        head = new;
+        timer_start(0);
+    }
+    else
+    {
+        prev->next = new;
+    }
+
+    ksleep(process);
+}
 
 void timer_init()
 {
@@ -7,7 +41,7 @@ void timer_init()
     Timer *pTimer;
     for (i = 0; i < 4; i++)
     {
-        pTimer = &timer[i];
+        pTimer = &timers[i];
         pTimer->base = (u32 *)(TIMER0_BASE_ADDR + ((i/2 > 0) ? 0x1000 : 0) - ((i%2 == 0) ? 0x20 : 0));
         *(pTimer->base+TLOAD)   = 0x0;
         *(pTimer->base+TVALUE)  = 0xFFFFFFFF;
@@ -38,6 +72,32 @@ void timer_handler(int n)
     {
         pTimer->tick = 0;
         pTimer->ss++;
+        print_timer_queue();
+
+        if (head != NULL)
+        {
+            head->timeleft--;
+
+            if (head->timeleft <= 0)
+            {
+                // Dequeue the process from the timer interrupt list.
+                ProcTimerNode * interruptor = head;
+                head = head->next;
+                if (head == NULL) timer_stop(0);
+
+                // Set it's priority to highest
+                interruptor->process->priority = __INT_MAX__;
+
+                // Wake it up
+                kwakeup(interruptor->process);
+
+                // Delete the node.
+                free(interruptor);
+
+                // tswitch()
+                tswitch();
+            }
+        }
 
         if (pTimer->ss == 60)
         {
