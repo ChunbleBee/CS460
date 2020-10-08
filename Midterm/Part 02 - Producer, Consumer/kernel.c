@@ -11,6 +11,7 @@ int ksleep(int event);
 PROC * kfork(int func, int priority);
 
 #include "wait.c"
+#include "Semaphores.c"
 
 int printSiblingList(char *listname, PROC *list)
 {
