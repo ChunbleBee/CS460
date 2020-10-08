@@ -4,6 +4,7 @@ ProcTimerNode * head;
 
 void timer_enqueue(PROC * process, int time)
 {
+    CPSRRegValue = int_off();
     ProcTimerNode * cur = head, * prev = NULL;
     if (process == NULL || time <= 0)
         return;
