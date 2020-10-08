@@ -41,7 +41,7 @@ int ksleep(int event)
     running->event = event;         // Set the event to wake for the running process
     running->status = SLEEP;        // Set the status of running process to sleeping
     tswitch();                      // Switch running process
-    int_on(CPSRRegValue);            // Turn interrupts back on.
+    int_on(CPSRRegValue);           // Turn interrupts back on.
 }
 
 int kwakeup(int event)
@@ -74,9 +74,9 @@ int kexit(int exitValue)
 
     int CPSRRegValue = int_off();
 
-    if (running == &proc[1])
+    if (running->pid == 1)
     {
-        kprintf("Can't kill process 1... Kernel panic?\n");
+        kprintf("Can't kill process 0/1... Kernel panic?\n");
         return -1;
     }
 

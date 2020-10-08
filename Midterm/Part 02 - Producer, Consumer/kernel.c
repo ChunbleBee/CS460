@@ -57,15 +57,17 @@ int init()
     running = p;
     kprintf("running = %d\n", running->pid);
     printList("freeList", freeList);
+    semaphore_setup();
 }
 
 int scheduler()
 {
-    kprintf("proc %d in scheduler ", running->pid);
+    //kprintf("proc %d in scheduler ", running->pid);
     if (running->status == READY)
         enqueue(&readyQueue, running);
     running = dequeue(&readyQueue);
-    kprintf("next running = %d\n", running->pid);
+
+    //kprintf("next running = %d\n", running->pid);
 }  
 
 int body()
@@ -94,7 +96,7 @@ int body()
             running->ppid);
         printSiblingList("Children: ", running->child);
 
-        kprintf("[ switch | fork | exit | sleep | wakeup | wait ] : ", running->pid);
+        kprintf("[ switch | fork | exit | sleep | wakeup | wait | producer | consumer ] : ", running->pid);
         kgets(cmd);
         printf("\n");
 
@@ -104,7 +106,13 @@ int body()
         }
 
         if (strcmp(cmd, "fork") == 0)
-            kfork((int)body, 1);
+            kfork((int)body, 2);
+        
+        if (strcmp(cmd, "producer") == 0)
+            kfork((int)Producer, 2);
+        
+        if (strcmp(cmd, "consumer") == 0)
+            kfork((int)Consumer, 2);
 
         if (strcmp(cmd, "exit") == 0)
         {

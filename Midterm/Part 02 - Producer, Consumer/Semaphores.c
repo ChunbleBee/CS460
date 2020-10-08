@@ -7,10 +7,9 @@ typedef struct semaphore
 }
 Semaphore;
 
-char buffer[BUFFERSIZE];
-char * items = "woodchipper";
+char ACharBuffer[BUFFERSIZE];
+char * items[64];
 
-int index = 0;
 int head = 0;
 int tail = 0;
 
@@ -19,9 +18,12 @@ Semaphore full;
 Semaphore pmutex;
 Semaphore cmutex;
 
-void setup()
+void semaphore_setup()
 {
-    empty
+    empty.value = BUFFERSIZE;
+    full.value = 0;
+    pmutex.value = 1;
+    cmutex.value = 1;
 }
 
 int P (Semaphore * sema)
@@ -68,24 +70,40 @@ int signal (Semaphore * sema)
 
 int Producer()
 {
-    while(TRUE)
+    int index = 0;
+    char item = '\t';
+
+    kprintf("Type a string to output: ");
+    kgets(items);
+    kprintf("\n");
+
+    kprintf(items);
+
+    while (index < 64)
     {
+        item = items[index++];
         P(&empty);
         P(&pmutex);
-        buffer[head++] = 'c';
+        ACharBuffer[head++] = item;
         head %= BUFFERSIZE;
         V(&pmutex);
         V(&full);
     }
+
+    kexit(running);
 }
 
 int Consumer()
 {
-    char item = items[index];
-    index = (++index) % 12;
-
-    P(&full);
-    P(&cmutex);
-    item = buffer[tail++];
-    tail %= BUFFERSIZE;
+    char item;
+    while (TRUE)
+    {
+        P(&full);
+        P(&cmutex);
+        item = ACharBuffer[tail++];
+        kputc(item);
+        tail %= BUFFERSIZE;
+        V(&cmutex);
+        V(&empty);
+    }
 }
