@@ -24,20 +24,10 @@ void IRQ_handler()
 {
    int vicstatus, sicstatus;
    int ustatus, kstatus;
-   int i;
 
    // read VIC status register to find out which interrupt
    vicstatus = VIC_STATUS; // VIC_STATUS=0x10140000=status reg
-   sicstatus = SIC_STATUS;
-
-   if (vicstatus & 0x10)
-   {
-      if (*(timers[0].base+TVALUE) == 0)
-      {
-         timer_handler(0);
-      }
-   }
-
+   sicstatus = SIC_STATUS;  
    //kprintf("vicstatus=%x sicstatus=%x\n", vicstatus, sicstatus);
    if (vicstatus & 0x80000000){
       if (sicstatus & 0x08){
@@ -54,19 +44,15 @@ int main()
    fbuf_init();
    kbd_init();
    
-   VIC_INTENABLE |= (1 << 4);    // enable timers 1, 2
-   VIC_INTENABLE |= (1 << 5);    // Enable timers 3, 4
-   VIC_INTENABLE |= (1 << 31);   // SIC to VIC's IRQ31
+   // enable VIC for IRQ 31
+   VIC_INTENABLE |= (1<<31); // SIC to VIC's IRQ31
    // enable KBD IRQ 
-   SIC_ENSET = 1 << 3;  // KBD int=3 on SIC
-   SIC_PICENSET = 1 << 3;  // KBD int=3 on SIC
+   SIC_ENSET = 1<<3;  // KBD int=3 on SIC
+   SIC_PICENSET = 1<<3;  // KBD int=3 on SIC
  
    kprintf("Welcome to WANIX in Arm\n");
-   timer_init();
-   timer_start(0);
    init();
    kfork((int)body, 1);
-
    while(1){
       if (readyQueue)
          tswitch();

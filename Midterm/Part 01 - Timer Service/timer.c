@@ -10,15 +10,19 @@ void timer_enqueue(PROC * process, int time)
     
     while(cur != NULL)
     {
-        prev = cur;
-        cur = cur->next;
+        if (time - cur->timeleft > 0)
+        {
+            time -= cur->timeleft;
+            prev = cur;
+            cur = cur->next;
+        }
     }
 
 
     ProcTimerNode * new = freed;
     freed = freed->next;
 
-    new->next = NULL;
+    new->next = cur;
     new->process = process;
     new->timeleft = time;
 
@@ -30,29 +34,36 @@ void timer_enqueue(PROC * process, int time)
     {
         prev->next = new;
     }
+    if (cur != NULL)
+    {
+        while (cur != NULL)
+        {
+            cur->timeleft -= time;
+            cur = cur->next;
+        }
+    }
 
     ksleep(process);
 }
 
 void timer_dequeue(int n)
 {
-    kprintf("\nSwitching to first process in timer list..\n");
     // Dequeue the process from the timer interrupt list.
-    int prevPriority;
     ProcTimerNode * interruptor = head;
+    int prevPriority            = interruptor->process->priority;
+
     head = head->next;
 
     // Set it's priority to highest
-    prevPriority = interruptor->process->priority;
-    interruptor->process->priority = __INT16_MAX__;
+    interruptor->process->priority = __INT8_MAX__;
 
     // Wake it up
     kwakeup(interruptor->process);
     interruptor->process->priority = prevPriority;
+    printList("Ready Queue", readyQueue);
 
     // free the node
     initialize_timer_node(interruptor);
-    timer_clearInterrupt(n);
 
     // switch processes
     tswitch();
@@ -112,39 +123,27 @@ void print_timer_queue()
 
 void timer_handler(int n)
 {
-    Timer * pTimer;
+    timers[n].tick++;
 
-    if (n < 0 || n >= 4)
-        return;
-
-    pTimer = &timers[n];
-    pTimer->tick++;
-
-    if (pTimer->tick == 120)
+    if (timers[n].tick == 60)
     {
-        pTimer->tick = 0;
-        pTimer->ss++;
+        timers[n].tick = 0;
 
         if (head != NULL)
         {
             head->timeleft--;
             print_timer_queue();
-        }
-        if (pTimer->ss == 60)
-        {
-            pTimer->ss = 0;
+
+            if (head->timeleft <= 0)
+            {
+                int CPSRRegValue = int_off();
+                timer_dequeue(n);
+                int_on(CPSRRegValue);
+            }
         }
     }
 
-    if (head != NULL && head->timeleft <= 0)
-    {
-        timer_dequeue(n);
-    }
-    else
-    {
-        timer_clearInterrupt(n);
-    }
-    
+    timer_clearInterrupt(n);
 }
 
 void timer_start(int n)
