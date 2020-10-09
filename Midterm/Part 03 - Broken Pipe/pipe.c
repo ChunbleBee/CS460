@@ -1,11 +1,20 @@
 #define NPIPE 4
 #define PSIZE 8
 
-typedef struct pipe{
-  char buf[PSIZE];
-  int head, tail, data, room;
-  int status;
-}PIPE;
+typedef enum PIPESTATUS
+{
+    FREED,
+    BUSY
+}
+PipeStatus;
+
+typedef struct pipe
+{
+    char buf[PSIZE];
+    int head, tail, data, room;
+    PipeStatus status;
+}
+PIPE;
 
 PIPE pipe[NPIPE];
 
@@ -13,77 +22,140 @@ extern UART uart[4];
 
 int pipe_init()
 {
-  int i;
-  printf("pipe_init()\n");
-  for (i=0; i<NPIPE; i++){
-    pipe[i].status = 0;
-  }
+    int i;
+    printf("pipe_init()\n");
+
+    for (i = 0; i < NPIPE; i++)
+    {
+        pipe[i].status = FREED;
+    }
 }
 
 PIPE *create_pipe()
 {
-  int i; PIPE *p;
-  printf("creating pipe ");
-  for (i=0; i<NPIPE; i++){
-    p = &pipe[i];
-    if (p->status==0){
-      p->status = 1;
-      break;
+    int i; PIPE *newPipe;
+    printf("creating pipe ");
+    for (i = 0; i < NPIPE; i++)
+    {
+        newPipe = &pipe[i];
+
+        if (newPipe->status == FREED)
+        {
+            newPipe->status = BUSY;
+            break;
+        }
     }
-  }
-  p->head = p->tail = p->data = 0;
-  p->room = PSIZE;
-  printf("OK\n");
-  return p;
+
+    newPipe->head = 0;
+    newPipe->tail = 0;
+    newPipe->data = 0;
+    newPipe->room = PSIZE;
+    printf("OK\n");
+
+    return newPipe;
 }
 
-int read_pipe(PIPE *p, char *buf, int n)
+int read_pipe(PIPE *pPipe, char *buf, int bytesToRead)
 {
-  int r = 0;
+    int i;
+    int exit = TRUE;
+    int bytesRead = 0;
 
-  if (n==0) return 0;
-  if (p->status==0) return -1;
-  while(n){
-
-    while(p->data){
-      *buf = p->buf[p->tail++];
-      p->tail %= PSIZE;
-      p->data--; p->room++; buf++; r++; n--;
-      if (n==0)
-	break;
+    if (bytesToRead == 0)
+    {
+        return 0;
     }
 
-    kwakeup((int)&p->room);
-    if (r)
-      return r;
-    ksleep((int)&p->data);
-  }
+    for (i = 0; i < NPIPE; i++)
+    {
+        if (pipe[i].status == BUSY)
+        {
+            exit = FALSE;
+            i = NPIPE;
+        }
+    }
+
+    if (exit == TRUE || pPipe->status == FREED)
+    {
+        return -1;
+    }
+
+    while (bytesToRead > 0)
+    {
+        while(pPipe->data)
+        {
+            *buf = pPipe->buf[pPipe->tail++];
+            pPipe->tail %= PSIZE;
+            pPipe->data--; pPipe->room++; buf++; bytesRead++; bytesToRead--;
+
+            if (bytesToRead == 0)
+            {
+                break;
+            }
+        }
+
+        kwakeup((int)&pPipe->room);
+
+        if (bytesRead)
+        {
+            return bytesRead;
+        }
+
+        ksleep((int)&pPipe->data);
+    }
 }
 
-int write_pipe(PIPE *p, char *buf, int n)
+int write_pipe(PIPE *pPipe, char *buf, int bytesToWrite)
 {
-  int r = 0; 
-  
-  if (p->status == 0) return -1;
-  if (n<=0) return 0;
-    
-  while(n){
-    while(p->room){
-      p->buf[p->head++] = *buf;
-      p->head %= PSIZE;
-      p->data++; p->room--; buf++; r++; n--;
-      if (n==0)
-	break;
+    int i = 0;
+    int exit = TRUE;
+    int bytesWritten = 0;
+
+    for (i = 0; i < NPIPE; i++)
+    {
+        if (pipe[i].status == BUSY)
+        {
+            exit = FALSE;
+            i = NPIPE;
+        }
     }
-    printf("proc%d wrote %d bytes\n", running->pid, r);
-    kwakeup((int)&p->data);
-    if (n==0){
-      printf("proc%d finished writing %d bytes\n", running->pid, r);
-      return r;
+
+    if (exit == TRUE || pPipe->status == FREED)
+    {
+        return -1;
     }
-    ksleep((int)&p->room);
-  }
+
+    if (bytesToWrite <= 0)
+    {
+        return 0;
+    }
+
+    while (bytesToWrite)
+    {
+        while(pPipe->room)
+        {
+            pPipe->buf[pPipe->head++] = *buf;
+            pPipe->head %= PSIZE;
+            pPipe->data++;
+            pPipe->room--;
+            buf++;
+            bytesWritten++;
+            bytesToWrite--;
+            
+            if (bytesToWrite == 0)
+            {
+                break;
+            }
+        }
+        printf("proc%d wrote %d bytes\n", running->pid, bytesWritten);
+        kwakeup((int)&pPipe->data);
+
+        if (bytesToWrite == 0)
+        {
+            printf("proc%d finished writing %d bytes\n", running->pid, bytesWritten);
+            return bytesWritten;
+        }
+
+        ksleep((int)&pPipe->room);
+    }
 }
-
-
-  
