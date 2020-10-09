@@ -4,19 +4,15 @@ ProcTimerNode * head;
 
 void timer_enqueue(PROC * process, int time)
 {
-    CPSRRegValue = int_off();
     ProcTimerNode * cur = head, * prev = NULL;
     if (process == NULL || time <= 0)
         return;
     
-    while(cur != NULL)
+    while(cur != NULL && time - cur->timeleft > 0)
     {
-        if (time - cur->timeleft > 0)
-        {
-            time -= cur->timeleft;
-            prev = cur;
-            cur = cur->next;
-        }
+        time -= cur->timeleft;
+        prev = cur;
+        cur = cur->next;
     }
 
 
@@ -35,13 +31,11 @@ void timer_enqueue(PROC * process, int time)
     {
         prev->next = new;
     }
-    if (cur != NULL)
+
+    while (cur != NULL)
     {
-        while (cur != NULL)
-        {
-            cur->timeleft -= time;
-            cur = cur->next;
-        }
+        cur->timeleft -= time;
+        cur = cur->next;
     }
 
     ksleep(process);
@@ -65,6 +59,8 @@ void timer_dequeue(int n)
 
     // free the node
     initialize_timer_node(interruptor);
+
+    timer_clearInterrupt(n);
 
     // switch processes
     tswitch();
@@ -124,6 +120,7 @@ void print_timer_queue()
 
 void timer_handler(int n)
 {
+    int CPSRRegValue = int_off();
     timers[n].tick++;
 
     if (timers[n].tick == 60)
@@ -137,13 +134,12 @@ void timer_handler(int n)
 
             if (head->timeleft <= 0)
             {
-                int CPSRRegValue = int_off();
                 timer_dequeue(n);
-                int_on(CPSRRegValue);
             }
         }
     }
 
+    int_on(CPSRRegValue);
     timer_clearInterrupt(n);
 }
 
@@ -159,18 +155,12 @@ void timer_start(int n)
 
 int timer_clearInterrupt(int n)
 {
-    if (n < 0 || n >= 4)
-        return;
-    
     Timer * pTimer = &timers[n];
     *(pTimer->base+TINTCLR) = 0xFFFFFFFF;
 }
 
 void timer_stop(int n)
 {
-    if (n < 0 || n >= 4)
-        return;
-
     Timer * pTimer = &(timers[n]);
     *(pTimer->base+TCNTL) &= 0x7F;
 }

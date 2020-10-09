@@ -95,6 +95,7 @@ int Producer()
 
 int Consumer()
 {
+    int consumed = 0;
     char item;
     while (TRUE)
     {
@@ -103,6 +104,7 @@ int Consumer()
         item = ACharBuffer[tail++];
         kputc(item);
         tail %= BUFFERSIZE;
+        consumed++;
         V(&cmutex);
         V(&empty);
     }

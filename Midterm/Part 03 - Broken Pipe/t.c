@@ -224,12 +224,12 @@ int main()
     init();
 
     kprintf("P0 kfork tasks: ");
-    kfork((int)pipe_writer_continuous, 1);
-    kfork((int)pipe_reader_continuous, 1);
+    //kfork((int)pipe_writer_continuous, 1);
+    //kfork((int)pipe_reader_continuous, 1);
     //kfork((int)pipe_writer_continuous, 1);
     //kfork((int)pipe_reader_single, 1);
-    //kfork((int)pipe_writer_single, 1);
-    //kfork((int)pipe_reader_continuous, 1);
+    kfork((int)pipe_writer_single, 1);
+    kfork((int)pipe_reader_continuous, 1);
 
     printList("readyQueue", readyQueue);
 
