@@ -140,7 +140,8 @@ int main()
    color = CYAN;
    kprintf("P0 switch to P1 : ");
 
-   while(1){
+   while(1)
+   {
      while(readyQueue==0);
      tswitch();  // P0 switch to run a ready proc
    }
