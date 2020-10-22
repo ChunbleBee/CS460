@@ -1,2 +1,5 @@
 dd if=/dev/zero of=./sdcard.img bs=1024 count=1024
 mkfs ./sdcard.img
+sudo mount ./sdcard.img /mnt
+sudo mkdir /mnt/bin /mnt/dev /mnt/etc /mnt/user
+sudo umount /mnt
