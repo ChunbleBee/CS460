@@ -2,38 +2,38 @@
 extern PROC *freeList, *readyQueue, *running, proc[NPROC];
 
 /************ wait.c file ****************/
-PROC *kfork(int func, int priority)
-{
-    int i;
-    PROC *p = get_proc(&freeList);;
+// PROC *kfork(int func, int priority)
+// {
+//     int i;
+//     PROC *p = get_proc(&freeList);;
 
-    if (p == NULL)
-    {
-        printf("no more PROC, kfork failed\n");
-        return 0;
-    }
+//     if (p == NULL)
+//     {
+//         printf("no more PROC, kfork failed\n");
+//         return 0;
+//     }
 
-    p->status       = READY;
-    p->priority     = priority;
-    p->ppid         = running->pid;
-    p->parent       = running;
-    p->sibling      = running->child;
-    running->child  = p;
+//     p->status       = READY;
+//     p->priority     = priority;
+//     p->ppid         = running->pid;
+//     p->parent       = running;
+//     p->sibling      = running->child;
+//     running->child  = p;
 
-    // set kstack to resume to body
-    // stack = r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r14
-    //         1  2  3  4  5  6  7  8  9  10 11  12  13  14
-    for (i=1; i<15; i++)
-        p->kstack[SSIZE-i] = 0;
+//     // set kstack to resume to body
+//     // stack = r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r14
+//     //         1  2  3  4  5  6  7  8  9  10 11  12  13  14
+//     for (i=1; i<15; i++)
+//         p->kstack[SSIZE-i] = 0;
 
-    p->kstack[SSIZE-1]  = (int)func;  // in dec reg=address ORDER !!!
-    p->ksp              = &(p->kstack[SSIZE-14]);
+//     p->kstack[SSIZE-1]  = (int)func;  // in dec reg=address ORDER !!!
+//     p->ksp              = &(p->kstack[SSIZE-14]);
 
-    enqueue(&readyQueue, p);
-    printf("proc %d kforked a child %d\n", running->pid, p->pid);
+//     enqueue(&readyQueue, p);
+//     printf("proc %d kforked a child %d\n", running->pid, p->pid);
 
-    return p;
-}
+//     return p;
+// }
 
 int ksleep(int event)
 {

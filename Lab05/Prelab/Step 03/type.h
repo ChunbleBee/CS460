@@ -14,7 +14,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
 
-// type.h file
+#define NULL (void *) 0
+#define TRUE 1
+#define FALSE 0
 
 typedef unsigned char  u8;
 typedef unsigned short u16;
