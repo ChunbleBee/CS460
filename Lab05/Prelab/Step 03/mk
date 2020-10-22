@@ -10,16 +10,4 @@ rm *.o *.elf
 echo ready to go?
 read dummy
 
-qemu-system-arm -M versatilepb -m 128M -sd sdimage -kernel t.bin
-
-
-
-
-
-
-
- 
-
-
-
-
+qemu-system-arm -M versatilepb -m 128M -sd sdimage.img -kernel t.bin

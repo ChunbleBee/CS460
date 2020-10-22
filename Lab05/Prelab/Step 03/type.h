@@ -116,13 +116,14 @@ During task switch: must switch to next running's pgdir (and flush TLB)
 
 #define BLOCK_SIZE 1024
 #define BLKSIZE    1024
-/*
+
 typedef unsigned long  u32;
 typedef unsigned short u16;
 typedef unsigned char  u8;
 typedef unsigned short ushort;
 typedef unsigned long  ulong;
-*/
+
+
 typedef struct ext2_super_block {
 	u32	s_inodes_count;		/* Inodes count */
 	u32	s_blocks_count;		/* Blocks count */
@@ -172,7 +173,7 @@ typedef struct ext2_super_block {
 	char	s_volume_name[16]; 	/* volume name */
 	char	s_last_mounted[64]; 	/* directory where last mounted */
 	u32	s_reserved[206];	/* Padding to the end of the block */
-}SUPER;
+} SUPER;
 
 typedef struct ext2_group_desc
 {
@@ -184,7 +185,7 @@ typedef struct ext2_group_desc
 	u16	bg_used_dirs_count;	/* Directories count */
 	u16	bg_pad;
 	u32	bg_reserved[3];
-}GD;
+} GD;
 
 typedef struct ext2_inode {
 	u16	i_mode;		/* File mode */
@@ -203,7 +204,7 @@ typedef struct ext2_inode {
         u32     pad[5];         /* inode size MUST be 128 bytes */
         u32	i_date;         /* MTX date */
 	u32	i_time;         /* MTX time */
-}INODE;
+} INODE;
 
 typedef struct ext2_dir_entry_2 {
 	u32	inode;			/* Inode number */
@@ -211,4 +212,4 @@ typedef struct ext2_dir_entry_2 {
 	u8	name_len;		/* Name length */
 	u8	file_type;
 	char	name[255];      	/* File name */
-}DIR;
+} DIR;
