@@ -1,0 +1,2 @@
+dd if=/dev/zero of=./sdcard.img bs=1024 count=1024
+mkfs ./sdcard.img
