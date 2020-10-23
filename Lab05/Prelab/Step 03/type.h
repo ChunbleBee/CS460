@@ -13,14 +13,22 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
-
 #define NULL (void *) 0
 #define TRUE 1
 #define FALSE 0
 
-typedef unsigned char  u8;
+#define BLOCK_SIZE 1024
+#define BLKSIZE    1024
+
+#define GB      0x40000000
+#define MB      0x100000
+#define KB      0x400
+
+typedef unsigned long  u32;
 typedef unsigned short u16;
-typedef unsigned int   u32;
+typedef unsigned char  u8;
+typedef unsigned short ushort;
+typedef unsigned long  ulong;
 
 #define VA(x) (0x80000000 + (u32)x)
 #define PA(x) (0x80000000 - (u32)x)
@@ -113,16 +121,6 @@ Each Pi>0: pgdir = [
                    ]
 During task switch: must switch to next running's pgdir (and flush TLB)
 **********************************************************************/
-
-#define BLOCK_SIZE 1024
-#define BLKSIZE    1024
-
-typedef unsigned long  u32;
-typedef unsigned short u16;
-typedef unsigned char  u8;
-typedef unsigned short ushort;
-typedef unsigned long  ulong;
-
 
 typedef struct ext2_super_block {
 	u32	s_inodes_count;		/* Inodes count */
