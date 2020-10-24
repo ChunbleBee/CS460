@@ -20,15 +20,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define BLOCK_SIZE 1024
 #define BLKSIZE    1024
 
+#define TRACKS 18
+#define CYLINDERS 36
+#define BLOCKSIZE 1024
+#define GROUPDESCBLOCK 2
+#define INPUTBUFFERSIZE 64
+
 #define GB      0x40000000
 #define MB      0x100000
 #define KB      0x400
 
-typedef unsigned long  u32;
-typedef unsigned short u16;
-typedef unsigned char  u8;
-typedef unsigned short ushort;
-typedef unsigned long  ulong;
+typedef unsigned long  	u32;
+typedef unsigned short 	u16;
+typedef unsigned char  	u8;
+typedef unsigned short 	ushort;
+typedef unsigned long  	ulong;
+typedef unsigned char 	byte;
 
 #define VA(x) (0x80000000 + (u32)x)
 #define PA(x) (0x80000000 - (u32)x)
@@ -82,7 +89,7 @@ typedef unsigned long  ulong;
 #define  ZOMBIE 4
 #define  printf  kprintf
  
-typedef struct proc{
+typedef struct proc {
   struct proc *next;
   int    *ksp;     // at 4
 
@@ -107,20 +114,7 @@ typedef struct proc{
 
   char   name[64];  // name string
   int    kstack[SSIZE];
-}PROC;
-/**********************************************************************
-pgdir of PROC in ARM: 
-initial plan: each PROC has a dedicated pgdir at 6M or 7MB by pid
-in 7MB: 4KB for each pgdir ==> has space for 1m/4K= 256 pgdirs
-defined as pgdir[256], for P0 to P255
-P0: pgdir = initial PGDIR= low  2048 entries map 0-2G to PA(0-2G)
-                           high 2048 entries map 2G-4G to PA(0-memSize)
-Each Pi>0: pgdir = [
-                    low entry 0:  map VA(0-1M) to its PA at 8MB+(pid-1)1B
-                    high entires: map VA(2G-mem) to (0-mem) for kernel access
-                   ]
-During task switch: must switch to next running's pgdir (and flush TLB)
-**********************************************************************/
+} PROC;
 
 typedef struct ext2_super_block {
 	u32	s_inodes_count;		/* Inodes count */
