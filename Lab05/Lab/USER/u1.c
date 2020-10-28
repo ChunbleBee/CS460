@@ -8,24 +8,18 @@ typedef unsigned int    u32;
 
 int main()
 {
-  int pid, ppid;
+  int pid, ppid; 
   char line[64];
-  u32 mode,  *up;
-
-  mode = getcpsr();
-  mode = mode & 0x1F;
-  printf("CPU mode=%x\n", mode);  // verify we are in USER mode
 
   pid = getpid();
-  ppid = getppid();
   
   while(1){
-    printf("This is process %d in Umode parent=%d\n", pid, ppid);
+    printf("This is proc %d in Umode at %x parent=%d\n",
+	                pid, getPA(), getppid());
     umenu();
     printf("input a command : ");
     ugets(line); 
-    printf("\n"); 
- 
+  
     if (strcmp(line, "getpid")==0)
        ugetpid();
     if (strcmp(line, "getppid")==0)
@@ -36,6 +30,15 @@ int main()
        uchname();
     if (strcmp(line, "switch")==0)
        uswitch();
+    if (strcmp(line, "sleep")==0)
+       usleep();
+    if (strcmp(line, "wakeup")==0)
+       uwakeup();
+    if (strcmp(line, "kfork")==0)
+       ukfork();
+    if (strcmp(line, "exit")==0)
+       uexit();
+    if (strcmp(line, "wait")==0)
+      uwait();
   }
 }
-

@@ -1,9 +1,9 @@
 /************ uio.c file: must implement printf() in U space **********/
 #define printf uprintf
-
 char *tab = "0123456789ABCDEF";
 
-int uputc(char);
+int uputc(char c);
+int uprintf(char *fmt, ...);
 
 int ugets(char *line)
 {
@@ -75,32 +75,27 @@ int uprinti(int x)
 
 int uprintf(char *fmt,...)
 {
-    int *ip;
-    char *cp;
-    cp = fmt;
-    ip = (int *)&fmt + 1;
+  int *ip;
+  char *cp;
+  cp = fmt;
+  ip = (int *)&fmt + 1;
 
-    while(*cp)
-    {
-        if (*cp != '%')
-        {
-            uputc(*cp);
-            if (*cp=='\n')
-            uputc('\r');
-            cp++;
-            continue;
-        }
-
-        cp++;
-
-        switch(*cp)
-        {
-            case 'c': uputc((char)*ip);     break;
-            case 's': uprints((char *)*ip); break;
-            case 'd': uprinti(*ip);         break;
-            case 'u': uprintu((u32)*ip);    break;
-            case 'x': uprintx((u32)*ip);    break;
-        }
-        cp++; ip++;
+  while(*cp){
+    if (*cp != '%'){
+      uputc(*cp);
+      if (*cp=='\n')
+	uputc('\r');
+      cp++;
+      continue;
     }
+    cp++;
+    switch(*cp){
+    case 'c': uputc((char)*ip);      break;
+    case 's': uprints((char *)*ip);  break;
+    case 'd': uprinti(*ip);          break;
+    case 'u': uprintu((u32)*ip);          break;
+    case 'x': uprintx((u32)*ip);          break;
+    }
+    cp++; ip++;
+  }
 }

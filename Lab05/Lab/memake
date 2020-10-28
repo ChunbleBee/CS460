@@ -4,7 +4,8 @@ arm-none-eabi-as -mcpu=arm926ej-s ts.s -o ts.o
 arm-none-eabi-gcc -c -mcpu=arm926ej-s t.c -o t.o
 arm-none-eabi-gcc -c -mcpu=arm926ej-s uPtable.c -o uptable.o
 arm-none-eabi-gcc -c -mcpu=arm926ej-s load.c -o load.o
-arm-none-eabi-ld -T t.ld ts.o t.o uptable.o load.o svc.obj -Ttext=0x10000 -o t.elf
+arm-none-eabi-gcc -c -mcpu=arm926ej-s svc.c -o svc.o
+arm-none-eabi-ld -T t.ld ts.o t.o uptable.o load.o svc.o -Ttext=0x10000 -o t.elf
 arm-none-eabi-objcopy -O binary t.elf t.bin
 
 rm *.o *.elf

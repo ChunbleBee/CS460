@@ -16,59 +16,64 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "type.h"
 extern PROC proc[], *running;
 extern int tswitch();
+extern int kfork(char* process);
 
 int ktswitch()
 {
-  // swtich process
+    tswitch();
 }
 
 int kgetpid()
 {
-  //return pid;
+    return running->pid;
 }
 
 int kgetppid()
 {
-  //return ppid;
+    return running->ppid;
 }
 
 char *pstatus[]={"FREE   ","READY  ","SLEEP  ","BLOCK  ","ZOMBIE", " RUN  "};
 int kps()
 {
-  // print process info
+    kprintf(pstatus[running->status]);
 }
 
 int kchname(char *s)
-{ 
-  // change process name  to string s
+{
+    kstrcpy(running->name, s);
 }
 
 int kgetPA()
 {
-  return Umode PA of process
+  return (running->pgdir[2048] & ~0xC32);
 }
-
 
 int svc_handler(int a, int b, int c, int d)
 {
-  int r;
-  
-  // printf("svc_handler: a=%d b=%d c=%d d=%d\n",a,b,c,d);
+    int r;
 
-  switch(a){ // a is the call number
-    
-     case 0: r = kgetpid();          break;
-     case 1: r = kgetppid();         break;
-     case 2: r = kps();              break;
-     case 3: r = kchname((char *)b); break;
-     case 4: r = ktswitch();         break;
+    // printf("svc_handler: a=%d b=%d c=%d d=%d\n",a,b,c,d);
 
-     case 90: r = kgetc();           break;
-     case 91: r = kputc(b);          break;
-     case 92: r = kgetPA();          break;
-     default: printf("invalid syscall %d\n", a);
-  }
+    switch(a) { // a is the call number
 
-  return r; //return to goUmode in ts.s, which will replace r0 in Kstack with r
+        case 0: r = kgetpid();          break;
+        case 1: r = kgetppid();         break;
+        case 2: r = kps();              break;
+        case 3: r = kchname((char *)b); break;
+        case 4: r = ktswitch();         break;
+        case 5: r = ksleep(b);          break;
+        case 6: r = kwakeup(b);         break;
+        case 7: r = kfork((char *) b);  break;
+        case 8: r = kexit(b);           break;
+        case 9: r = kwait(b);           break;
+
+        case 90: r = kgetc();           break;
+        case 91: r = kputc(b);          break;
+        case 92: r = kgetPA();          break;
+        default: printf("invalid syscall %d\n", a);
+    }
+
+    return r; //return to goUmode in ts.s, which will replace r0 in Kstack with r
 }
 

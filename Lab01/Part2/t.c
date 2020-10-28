@@ -60,6 +60,7 @@ int main()
     INodeTableBlock = (u16) pGroupDesc->bg_inode_table;
     getDiskBlock(INodeTableBlock, ioBuffer01);
     pINode = (IndexNode *) ioBuffer01 + 1;
+
     for (index = 0; index < 2; index++)
     {
         BootINodes[index] = search(pINode, BootNames[index]) - 1;
@@ -72,6 +73,7 @@ int main()
         getDiskBlock(INodeTableBlock + BootINodes[index]/8, ioBuffer01);
         pINode = (IndexNode *) ioBuffer01 + BootINodes[index]%8;
     }
+    
     if ((u16)pINode->i_block[12] != NULL)
     {
         getDiskBlock((u16) pINode->i_block[12], ioBuffer02);

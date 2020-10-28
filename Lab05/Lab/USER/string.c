@@ -1,3 +1,4 @@
+int kprintf(char *, ...);
 int strlen(char *s)
 {
   int i = 0;
@@ -25,7 +26,6 @@ int strcpy(char *dest, char *src)
   }
   *dest = 0;
 }
-/*
 int kstrcpy(char *dest, char *src)
 {
   while(*src){
@@ -33,7 +33,7 @@ int kstrcpy(char *dest, char *src)
   }
   *dest = 0;
 }
-*/
+
 int atoi(char *s)
 {
   int v = 0;
@@ -41,6 +41,7 @@ int atoi(char *s)
     v = 10*v + (*s - '0');
     s++;
   }
+  //kprintf("v=%d\n", v);
   return v;
 }
 int geti()

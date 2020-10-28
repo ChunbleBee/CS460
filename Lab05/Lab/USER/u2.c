@@ -4,7 +4,7 @@ typedef unsigned int    u32;
 
 #include "string.c"
 #include "uio.c"
-#include "ucode.c"
+#include "ucode2.c"
 
 int main()
 {
@@ -36,6 +36,16 @@ int main()
        uchname();
     if (strcmp(line, "switch")==0)
        uswitch();
+    if (strcmp(line, "sleep")==0)
+       usleep();
+    if (strcmp(line, "wakeup")==0)
+       uwakeup();
+    if (strcmp(line, "kfork")==0)
+       ukfork();
+    if (strcmp(line, "exit")==0)
+       uexit();
+    if (strcmp(line, "wait")==0)
+      uwait();
   }
 }
 
