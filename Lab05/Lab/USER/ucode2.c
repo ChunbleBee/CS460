@@ -93,7 +93,7 @@ int uwakeup()
 
 int ukfork()
 {
-    return syscall(7, "u1", 0, 0);
+    return syscall(7, "u2", 0, 0);
 }
 
 int uexit()

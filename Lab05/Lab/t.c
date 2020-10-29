@@ -27,11 +27,7 @@ int color;
 #include "queue.c"
 #include "kernel.c"
 #include "wait.c"
-
-//#include "svc.c"
-
 #include "sdc.c"
-//#include "load.c"
 
 void copy_vectors(void) {
     extern u32 vectors_start;
@@ -135,7 +131,6 @@ int main()
 
    unlock();
    kfork("u1");
-   kfork("u2");
    
    color = CYAN;
    kprintf("P0 switch to P1 : ");

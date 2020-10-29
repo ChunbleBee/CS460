@@ -106,6 +106,7 @@ int kexit(int exitValue)
 int kwait(int *status)
 {
     PROC * curChild = running->child;
+    PROC * prevChild = NULL;
     int CPSRRegValue = int_off();
 
     if (curChild == NULL)
@@ -120,11 +121,22 @@ int kwait(int *status)
             int procID = curChild->pid;
             *status = curChild->exitCode;
             curChild->status = FREE;
+
+            if (prevChild != NULL)
+            {
+                prevChild->sibling = curChild->sibling;
+            }
+            else
+            {
+                running->child = curChild->sibling;
+            }
+            
             enqueue(&freeList, curChild);
             return procID;
         }
 
         curChild = curChild->sibling;
+        prevChild = curChild;
     }
 
     int_on(CPSRRegValue);

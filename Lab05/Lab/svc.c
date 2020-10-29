@@ -14,7 +14,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
 #include "type.h"
-extern PROC proc[], *running;
+extern PROC proc[], *running, *readyQueue, *sleepList, *freeList;
+extern int printQ(PROC *p);
+extern int printSleepList(PROC *p);
+extern int printList(PROC *p);
+extern int printSiblingList(PROC *p);
 extern int tswitch();
 extern int kfork(char* process);
 
@@ -36,7 +40,11 @@ int kgetppid()
 char *pstatus[]={"FREE   ","READY  ","SLEEP  ","BLOCK  ","ZOMBIE", " RUN  "};
 int kps()
 {
-    kprintf(pstatus[running->status]);
+    kprintf("%s\n", pstatus[running->status]);
+    printQ(readyQueue);
+    printSleepList(sleepList);
+    printList(freeList);
+    printSiblingList(running);
 }
 
 int kchname(char *s)

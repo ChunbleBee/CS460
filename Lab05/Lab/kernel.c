@@ -162,6 +162,8 @@ PROC *kfork(char *filename)
   //  r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 ufp uip upc|
   //------------------------------------------------
   //  14 13 12 11 10 9  8  7  6  5  4   3    2   1 |
+  p->sibling = running->child;
+  running->child = p;
 
   enqueue(&readyQueue, p);
 

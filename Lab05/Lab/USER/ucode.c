@@ -107,4 +107,3 @@ int uwait()
         printf("status = %x",status);
     printf("\n");
 }
-

@@ -15,9 +15,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
 
 // queue.c file
-
-
 extern PROC *freeList;
+char *pstat[]={"FREE","READY","SLEEP","BLOCK","ZOMBIE", "RUN"};
 
 int enqueue(PROC **queue, PROC *p)
 {
@@ -46,8 +45,19 @@ int printQ(PROC *p)
 {
   kprintf("readyQueue = ");
   while(p){
-    kprintf("[%d%d]->", p->pid,p->priority);
+    kprintf("[%d%d%s]->", p->pid,p->priority, pstat[p->status]);
     p = p->next;
+  }
+  kprintf("NULL\n");
+}
+
+int printSiblingList(PROC *p)
+{
+  kprintf("Children: ");
+  p = p->child;
+  while(p){
+    kprintf("[%d%d%s]->", p->pid,p->priority, pstat[p->status]);
+    p = p->sibling;
   }
   kprintf("NULL\n");
 }
