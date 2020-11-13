@@ -28,6 +28,8 @@ Color LCD base address: 0x10120000 - 0x1012FFFF
 20    interruptStatusReg
 etc
 ************************************************************************/
+#pragma once
+
 #include "font0"
 
 u8 cursor;

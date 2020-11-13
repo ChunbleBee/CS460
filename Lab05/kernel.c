@@ -13,6 +13,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
+#pragma once
+
+#include "type.h"
+#include "vid.c"
 
 extern int goUmode();
 
@@ -79,22 +83,11 @@ int scheduler()
   }
 }  
 
-/*************** kfork(filename)***************************
-kfork() a new proc p with filename as its UMODE image.
-Same as kfork() before EXCEPT:
-1. Each proc has a level-1 pgtable at 6MB, 6MB+16KB, , etc. by pid
-2. The LOW 258 entries of pgtable ID map 258 MB VA to 258 MB PA  
-3. Each proc's UMODE image size = 1MB at 8MB, 9MB,... by pid=1,2,3,..
-4. load(filenmae, p); load filenmae (/bin/u1 or /bin/u2) to p's UMODE address
-5. set p's Kmode stack for it to 
-           resume to goUmode
-   which causes p to return to Umode to execcute filename
-***********************************************************/
-
 PROC *kfork(char *filename)
 {
   int i, r; 
   int pentry, *ptable;
+  byte * CurrentAddress, * ParentAddress;
   char *cp, *cq;
   char *addr;
   char line[8];
@@ -126,42 +119,16 @@ PROC *kfork(char *filename)
   p->kstack[SSIZE-15] = (int)goUmode;  // in dec reg=address ORDER !!!
   p->ksp = &(p->kstack[SSIZE-28]);
 
-  // kstack must contain a resume frame FOLLOWed by a goUmode frame
-  //  ksp  
-  //  -|-----------------------------------------
-  //  r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 fp ip pc|
-  //  -------------------------------------------
-  //  28 27 26 25 24 23 22 21 20 19 18  17 16 15
-  //  
-  //   usp   
-  // -|-----goUmode--------------------------------
-  //  r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 ufp uip upc|
-  //-------------------------------------------------
-  //  14 13 12 11 10 9  8  7  6  5  4   3    2   1
-
-  // to go Umode, must set new PROC's Umode cpsr to IF=00 umode=b'10000'=0x10
-
-  p->cpsr = (int *)0x10;    // previous mode was Umode
-
-  // must load filename to Umode image area at 8MB+(pid-1)*1MB
+  p->cpsr = (int *)0x10;
   
-  r = load(filename, p); // p->PROC containing pid, pgdir, etc
+  r = load(filename, p);
   if (r==0){
      printf("load %s failed\n", filename);
      return 0;
   }
-  // must fix Umode ustack for it to goUmode: how did the PROC come to Kmode?
-  // by swi # from VA=0 in Umode => at that time all CPU regs are 0
-  // we are in Kmode, p's ustack is at its Uimage (8mb+(pid-1)*1Mb) high end
-  // from PROC's point of view, it's a VA at 1MB (from its VA=0)
-  
-  p->usp = (int *)VA(0x100000);  // usp->high end of 1MB Umode area
-  p->kstack[SSIZE-1] = VA(0);    // upc = VA(0): to beginning of Umode area
+  p->usp = (int *)VA(0x100000);
+  p->kstack[SSIZE-1] = VA(0);
 
-  // -|-----goUmode---------------------------------
-  //  r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 ufp uip upc|
-  //------------------------------------------------
-  //  14 13 12 11 10 9  8  7  6  5  4   3    2   1 |
   p->sibling = running->child;
   running->child = p;
 
@@ -171,4 +138,80 @@ PROC *kfork(char *filename)
   printQ(readyQueue);
 
   return p;
+}
+
+int fork()
+{
+  int i;
+  byte *ParentAddr, *ChildAddr;
+  PROC *child = dequeue(&freeList);
+
+  if (child == NULL)
+  {
+    kprintf("kfork failed\n");
+    return NULL;
+  }
+
+  child->ppid = running->ppid;
+  child->parent = running;
+  child->status = READY;
+  child->priority = 1;
+  ParentAddr = running->pgdir[2048] & 0xFFFF00000;
+  ChildAddr = child->pgdir[2048] & 0xFFFF0000;
+  memcpy(ChildAddr, ParentAddr, 1*MB);
+
+  for (i = 0; i <= 14; i++)
+  {
+    child->kstack[SSIZE - i] = running->kstack[SSIZE - i];
+  }
+
+  child->kstack[SSIZE-14] = 0;
+  child->kstack[SSIZE-15] = (int)goUmode;
+  child->ksp = &(child->kstack[SSIZE-28]);
+  child->usp = running->usp;
+  child->cpsr = running->cpsr;
+  enqueue(&readyQueue, child);
+  return child->pid;
+}
+
+int exec(char *cmdline)
+{
+  int i, upa, usp;
+  char *cp, kline[128], file[32], filename[32];
+
+  strcpy(kline, cmdline);
+  cp = kline;
+  i = 0;
+
+  while (*cp != ' ')
+  {
+    filename[i] = *cp;
+    i++;
+    cp++;
+  }
+
+  if (filename[0] != '/')
+  {
+    strcpy(file, "/bin/bash");
+  }
+
+  strcat(file, filename);
+
+  upa = running->pgdir[2048] & 0xffff0000;
+
+  if (!loadelf(file, running))
+    return -1;
+  
+  usp = upa + 1*MB - 128;
+  strcp((char *)usp, kline);
+  running->usp = (int *)VA(1*MB - 128);
+
+  for (i = 2; i < 14; i++)
+  {
+    running->kstack[SSIZE - i] = 0;
+  }
+
+  running->kstack[SSIZE - 1] = (int)VA(0);
+
+  return (int)running->usp;
 }
