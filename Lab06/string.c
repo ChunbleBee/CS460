@@ -14,13 +14,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
 #pragma once
+
 #define strcat kstrcat
 #define strcpy kstrcpy
+#define strtok kstrtok
 
 int kprintf(char *, ...);
 int strcmp(char *s1, char *s2);
 int strlen(char *s);
-char *strtok(char *string, char delim);
+char *kstrtok(char *string, char delim);
 
 int strlen(char *s)
 {
@@ -79,53 +81,36 @@ int geti()
   return atoi(s);
 }
 
-char *strtok(char *string, char delim)
+char *kstrtok(char *string, char delim)
 {
   static char *oldstring;
   char * output;
+  printf("Here, str: %s, old: %s\n", string, oldstring);
 
   if (string == NULL)
   {
     string = oldstring;
+    printf("Here 01, str:%s\n", string);
   }
 
   if (*string == '\0')
   {
-    oldstring = string;
+    printf("Here 02");
     return NULL;
   }
-
-  while(*string != '\0' && *string != delim)
-  {
-    string++;
-  }
-
-  // Everything in the string was a delimiter, or the string was of size 0, return NULL
-  if (*string == '\0')
-  {
-    oldstring = string;
-    return NULL;
-  }
-
-  string++;
   output = string;
-
   while(*string != '\0' && *string != delim)
   {
     string++;
   }
 
-  if (*string != '\0')
+  if (*string == delim)
   {
     *string = '\0';
     string++;
-    oldstring = string;
   }
-  else
-  {
-    oldstring = string;
-  }
-  
+
+  oldstring = string;
   return output;
 }
 

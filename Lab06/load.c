@@ -1,11 +1,11 @@
 #pragma once
 
 #include "type.h"
-#include "string.h"
 
 int getblock(int blk, char* buf);
 u32 search(INODE* node, char* filename);
 int load (char *filename, PROC *process);
+char *kstrtok(char *string, char delim);
 int attemptLoadToBuffer(INODE *pINode, u16 INodeTableBlock, char *filename, byte *buffer);
 int loadInodeContentsIntoPageTable(INODE * pINode, PROC * process);
 int loadprogram(char *filename, PROC *process);
@@ -19,6 +19,7 @@ byte inodeBuffer[BLOCK_SIZE];
 
 int load (char *filename, PROC *process)
 {
+    printf("-------------- Attempting to load: %s --------------\n", filename);
     GD* pGroupDesc;
     INODE* pINode;
     u16 index;
@@ -31,22 +32,21 @@ int load (char *filename, PROC *process)
     INodeTableBlock = (u16) pGroupDesc->bg_inode_table;
 
     // Get the inode table block
-    printf("----------------1------------------\n");
     getblock(INodeTableBlock, buffer);
-    printf("----------------2------------------\n");
     pINode = (INODE *) buffer + 1;
-
-    char * next = strtok(filename, '/');
-    printf("----------------3: %s --------------\n", next);
-    loadedINode = attemptLoadToBuffer(pINode, INodeTableBlock, next, buffer);
-    printf("----------------4: %d --------------\n", loadedINode);
+    kstrtok(filename, '/');
+    char * next = kstrtok(NULL, '/');
 
     while(next != NULL && loadedINode >= 0)
     {
-        pINode = (INODE *) buffer + loadedINode%8;
-        next = strtok(NULL, '/');
+        printf("-------------- file:%s, inodenum: %d --------------\n", next, loadedINode);
         loadedINode = attemptLoadToBuffer(pINode, INodeTableBlock, next, buffer);
+        pINode = (INODE *) buffer + loadedINode%8;
+        next = kstrtok(NULL, '/');
+        printf("\tNext: %s", next);
     }
+    
+    printf("-------------- Outside File Search  --------------\n", next, loadedINode);
 
     if (loadedINode >= 0)
     {
