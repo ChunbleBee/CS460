@@ -28,7 +28,10 @@ Color LCD base address: 0x10120000 - 0x1012FFFF
 20    interruptStatusReg
 etc
 ************************************************************************/
+#pragma once
+
 #include "font0"
+#include "type.h"
 
 u8 cursor;
 int volatile *fb;

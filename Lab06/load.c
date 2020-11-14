@@ -1,9 +1,14 @@
+#pragma once
+
 #include "type.h"
+#include "string.h"
 
 int getblock(int blk, char* buf);
-u32 search(INODE* node, char* filename); 
+u32 search(INODE* node, char* filename);
+int load (char *filename, PROC *process);
 int attemptLoadToBuffer(INODE *pINode, u16 INodeTableBlock, char *filename, byte *buffer);
-int memcpy(char *dest, char *src, int size);
+int loadInodeContentsIntoPageTable(INODE * pINode, PROC * process);
+int loadprogram(char *filename, PROC *process);
 
 const char * bin = "bin";
 
@@ -26,23 +31,26 @@ int load (char *filename, PROC *process)
     INodeTableBlock = (u16) pGroupDesc->bg_inode_table;
 
     // Get the inode table block
+    printf("----------------1------------------\n");
     getblock(INodeTableBlock, buffer);
+    printf("----------------2------------------\n");
     pINode = (INODE *) buffer + 1;
 
-    // Find the bin inode
-    loadedINode = attemptLoadToBuffer(pINode, INodeTableBlock, bin, buffer);
-    if (loadedINode >= 0)
+    char * next = strtok(filename, '/');
+    printf("----------------3: %s --------------\n", next);
+    loadedINode = attemptLoadToBuffer(pINode, INodeTableBlock, next, buffer);
+    printf("----------------4: %d --------------\n", loadedINode);
+
+    while(next != NULL && loadedINode >= 0)
     {
         pINode = (INODE *) buffer + loadedINode%8;
-        
-        // Find the filename inode
-        loadedINode = attemptLoadToBuffer(pINode, INodeTableBlock, filename, buffer);
-        if (loadedINode >= 0)
-        {
-            pINode = (INODE *) buffer + loadedINode%8;
+        next = strtok(NULL, '/');
+        loadedINode = attemptLoadToBuffer(pINode, INodeTableBlock, next, buffer);
+    }
 
-            return loadInodeContentsIntoPageTable(pINode, process);
-        }
+    if (loadedINode >= 0)
+    {
+        return loadInodeContentsIntoPageTable(pINode, process);
     }
 
     return FALSE;
@@ -127,4 +135,17 @@ u32 search(INODE* node, char* filename)
     }
 
     return NULL;
+}
+
+int loadprogram(char *filename, PROC *process)
+{
+    byte buffer[BLKSIZE];
+    getblock(SUPERBLOCK, buffer);
+    SUPER *superblock = (SUPER *)buffer;
+    if (superblock->s_magic != EXT2FILESYSTEMTYPE) // I will not concede to magic numbers
+    {
+        return NULL;
+    }
+
+    return load(filename, process);
 }

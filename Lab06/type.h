@@ -13,6 +13,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
+#pragma once
+
 #define NULL (void *) 0
 #define TRUE 1
 #define FALSE 0
@@ -23,8 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TRACKS 18
 #define CYLINDERS 36
 #define BLOCKSIZE 1024
+#define SUPERBLOCK 1
 #define GROUPDESCBLOCK 2
 #define INPUTBUFFERSIZE 64
+#define EXT2FILESYSTEMTYPE 0xEF53
 
 #define GB      0x40000000
 #define MB      0x100000
@@ -205,3 +209,28 @@ typedef struct ext2_dir_entry_2 {
 	u8	file_type;
 	char	name[255];      	/* File name */
 } DIR;
+
+typedef struct elfhdr
+{
+	u32 magic;
+	byte elf[12];
+	u16 type;
+	u16 machine;
+	u32 entry;
+	u32 phoffset;
+	u32 shoffset;
+	u32 flags;
+	u16 ehsize;
+} ELFHeader;
+
+typedef struct prghdr
+{
+	u32 type;
+	u32 offset;
+	u32 vaddr;
+	u32 paddr;
+	u32 filesize;
+	u32 memsize;
+	u32 flags;
+	u32 align;
+} ProgramHeader;

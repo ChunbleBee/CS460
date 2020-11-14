@@ -13,6 +13,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
+#pragma once
+
 #include "type.h"
 #include "string.c"
 
@@ -130,7 +132,8 @@ int main()
    kernel_init();
 
    unlock();
-   kfork("u1");
+   kfork("/bin/u1");
+   kfork("/bin/u2");
    
    color = CYAN;
    kprintf("P0 switch to P1 : ");

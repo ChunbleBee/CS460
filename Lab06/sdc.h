@@ -1,4 +1,6 @@
 // sdc.h file
+#pragma once
+
 #define COMMAND_REG_DELAY	300
 #define DATA_REG_DELAY		1000
 #define CLK_CHANGE_DELAY	2000

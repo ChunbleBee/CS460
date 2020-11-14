@@ -13,8 +13,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
+#pragma once
+#define strcat kstrcat
+#define strcpy kstrcpy
 
 int kprintf(char *, ...);
+int strcmp(char *s1, char *s2);
+int strlen(char *s);
+char *strtok(char *string, char delim);
+
 int strlen(char *s)
 {
   int i = 0;
@@ -35,13 +42,6 @@ int strcmp(char *s1, char *s2)
 
 }
 
-int strcpy(char *dest, char *src)
-{
-  while(*src){
-    *dest++ = *src++;
-  }
-  *dest = 0;
-}
 int kstrcpy(char *dest, char *src)
 {
   while(*src){
@@ -49,6 +49,7 @@ int kstrcpy(char *dest, char *src)
   }
   *dest = 0;
 }
+
 int kstrcat(char *dest, char *src)
 {
   while(*dest)
@@ -70,12 +71,62 @@ int atoi(char *s)
   //kprintf("v=%d\n", v);
   return v;
 }
+
 int geti()
 {
   char s[16];
-  //kgetline(s);
   kgets(s);
   return atoi(s);
+}
+
+char *strtok(char *string, char delim)
+{
+  static char *oldstring;
+  char * output;
+
+  if (string == NULL)
+  {
+    string = oldstring;
+  }
+
+  if (*string == '\0')
+  {
+    oldstring = string;
+    return NULL;
+  }
+
+  while(*string != '\0' && *string != delim)
+  {
+    string++;
+  }
+
+  // Everything in the string was a delimiter, or the string was of size 0, return NULL
+  if (*string == '\0')
+  {
+    oldstring = string;
+    return NULL;
+  }
+
+  string++;
+  output = string;
+
+  while(*string != '\0' && *string != delim)
+  {
+    string++;
+  }
+
+  if (*string != '\0')
+  {
+    *string = '\0';
+    string++;
+    oldstring = string;
+  }
+  else
+  {
+    oldstring = string;
+  }
+  
+  return output;
 }
 
 int memcpy(char *dest, char *src, int size)

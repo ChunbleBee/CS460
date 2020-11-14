@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  need to catch Control-C, Contorl-D keys
  so need to recognize LCTRL key pressed and then C or D key
 ******************************/
+#pragma once
 
 #include "keymap"
 #include "keymap2"

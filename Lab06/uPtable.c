@@ -1,3 +1,4 @@
+#pragma once
 #include "type.h"
 
 int uPtable(PROC *process)
