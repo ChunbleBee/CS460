@@ -315,7 +315,7 @@ int kprinti(int x)
   kprintu((u32)x);
 }
 
-int kprintf(char *fmt,...)
+int kprintf(char *fmt, ...)
 {
   int *ip;
   char *cp;

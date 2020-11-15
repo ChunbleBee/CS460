@@ -59,12 +59,10 @@ int load (char *filename, PROC *process)
 int attemptLoadToBuffer(INODE *pINode, u16 INodeTableBlock, char *filename, byte *buffer)
 {
     int loadedINode = search(pINode, filename) - 1;
-    printf("loaded inode: %d", loadedINode);
+
     if (loadedINode >= 0)
     {
-        printf("Maybe here?\n");
         getblock((INodeTableBlock + loadedINode/8), buffer);
-        printf("have we gotten blocks?\n");
         return loadedINode;
     }
 
@@ -73,13 +71,19 @@ int attemptLoadToBuffer(INODE *pINode, u16 INodeTableBlock, char *filename, byte
 
 int loadInodeContentsIntoPageTable(INODE * pINode, PROC * process)
 {
-    kprintf("start program load\n");
-    u32 index = 0, bytesLoaded = 0, pageIndex = 0;
-    byte * procAddr = (byte *)(process->pgdir[2048] & ~0xC32); //&~0xc32 removes VA flag
-    printf("%x\t\t%x\t%x\n", procAddr, process->pgdir[2048], process->pgdir[2049]);
+    u32 index = 0;
+    u32 bytesLoaded = 0;
+    byte * procAddr01 = (byte *)(process->pgdir[2048] & ~0xC32); //&~0xc32 removes VA flag
+    byte * procAddr02 = (byte *)(process->pgdir[2049] & ~0xC32); //&~0xc32 removes VA flag
+    byte * procAddr = procAddr01;
 
     for (index = 0; index < 12; index++)
     {
+        if (bytesLoaded >= MB && procAddr < procAddr02)
+        {
+            kprintf("We somehow managed to load more than 1mb\n");
+            procAddr = procAddr02;
+        }
         kprintf(
             "\tiblock: %d\taddr: %x\texists: %c\n",
             pINode->i_block[index],
@@ -91,7 +95,6 @@ int loadInodeContentsIntoPageTable(INODE * pINode, PROC * process)
         getblock(pINode->i_block[index], procAddr);
         procAddr += KB;
         bytesLoaded += KB;
-        printf("How about here?\n");
     }
     if (pINode->i_block[12] != NULL)
     {

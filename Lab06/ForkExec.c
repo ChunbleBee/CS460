@@ -104,20 +104,19 @@ int fork()
 
 int exec(char *cmdline)
 {
-  int i, upa, usp;
+  int i, upa1, upa2, usp;
   char *cp, kline[128], file[32], filename[32];
-
   strcpy(kline, cmdline);
   cp = kline;
-  i = 0;
 
+  i = 0;
   while (*cp != ' ')
   {
     filename[i] = *cp;
     i++;
     cp++;
   }
-
+// /bin/echo tokyo
   if (filename[0] != '/')
   {
     strcpy(file, "/bin/");
@@ -125,15 +124,13 @@ int exec(char *cmdline)
 
   strcat(file, filename);
 
-  upa = running->pgdir[2048] & 0xffff0000;
-  upa = running->pgdir[2049] & 0xffff0000;
+  upa1 = running->pgdir[2048] & 0xffff0000;
+  upa2 = running->pgdir[2049] & 0xffff0000;
 
-  // if (!loadelf(file, running))
-  //   return -1;
   if (loadprogram(file, running) == FALSE)
     return -1;
-  
-  usp = upa + 1*MB - 128;
+
+  usp = upa1 + 1*MB - 128;
   strcpy((char *)usp, kline);
   running->usp = (int *)VA(1*MB - 128);
 
