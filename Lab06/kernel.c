@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vid.c"
 
 extern int goUmode();
-int loadelf(char *file, PROC *process);
 int fork();
 int exec(char *cmdline);
 

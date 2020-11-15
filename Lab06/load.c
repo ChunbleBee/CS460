@@ -23,7 +23,7 @@ int load (char *filename, PROC *process)
     GD* pGroupDesc;
     INODE* pINode;
     u16 index;
-    u16 loadedINode;
+    int loadedINode;
     u16 INodeTableBlock;
 
     // Get groupd descriptor
@@ -58,10 +58,13 @@ int load (char *filename, PROC *process)
 
 int attemptLoadToBuffer(INODE *pINode, u16 INodeTableBlock, char *filename, byte *buffer)
 {
-    u16 loadedINode = search(pINode, filename) - 1;
+    int loadedINode = search(pINode, filename) - 1;
+    printf("loaded inode: %d", loadedINode);
     if (loadedINode >= 0)
     {
+        printf("Maybe here?\n");
         getblock((INodeTableBlock + loadedINode/8), buffer);
+        printf("have we gotten blocks?\n");
         return loadedINode;
     }
 
@@ -88,6 +91,7 @@ int loadInodeContentsIntoPageTable(INODE * pINode, PROC * process)
         getblock(pINode->i_block[index], procAddr);
         procAddr += KB;
         bytesLoaded += KB;
+        printf("How about here?\n");
     }
     if (pINode->i_block[12] != NULL)
     {
@@ -130,22 +134,10 @@ u32 search(INODE* node, char* filename)
                 pDirEnt->name[pDirEnt->name_len] = heldByte;
                 pBufferIndex += pDirEnt->rec_len;
                 pDirEnt = (DIR *) pBufferIndex;
+                printf("Are we hanging here?\n");
             }
         }
     }
 
     return NULL;
-}
-
-int loadprogram(char *filename, PROC *process)
-{
-    byte buffer[BLKSIZE];
-    getblock(SUPERBLOCK, buffer);
-    SUPER *superblock = (SUPER *)buffer;
-    if (superblock->s_magic != EXT2FILESYSTEMTYPE) // I will not concede to magic numbers
-    {
-        return NULL;
-    }
-
-    return load(filename, process);
 }

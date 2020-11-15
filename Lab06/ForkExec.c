@@ -4,6 +4,7 @@
 extern int goUmode();
 extern PROC proc[NPROC], *freeList, *readyQueue, *sleepList, *running;
 extern int procsize;
+
 PROC *kfork(char *filename)
 {
   int i, r; 
@@ -66,6 +67,7 @@ PROC *kfork(char *filename)
 int fork()
 {
   int i;
+  int index = 0;
   byte *ParentAddr01, *ParentAddr02, *ChildAddr01, *ChildAddr02;
   PROC *child = dequeue(&freeList);
 
@@ -79,19 +81,19 @@ int fork()
   child->parent = running;
   child->status = READY;
   child->priority = 1;
-  ParentAddr01 = running->pgdir[2048] & 0xFFFF00000;
+  uPtable(child);
+  ParentAddr01 = running->pgdir[2048] & 0xFFFF0000;
   ParentAddr02 = running->pgdir[2049] & 0xFFFF0000;
   ChildAddr01 = child->pgdir[2048] & 0xFFFF0000;
-  ChildAddr02 = child->pgdir[2048] & 0xFFFF0000;
+  ChildAddr02 = child->pgdir[2049] & 0xFFFF0000;
   memcpy(ChildAddr01, ParentAddr01, MB);
   memcpy(ChildAddr02, ParentAddr02, MB);
-
   for (i = 0; i <= 14; i++)
   {
     child->kstack[SSIZE - i] = running->kstack[SSIZE - i];
   }
 
-  child->kstack[SSIZE-14] = 0;
+  child->kstack[SSIZE-14] = 0; // Child PID == 0
   child->kstack[SSIZE-15] = (int)goUmode;
   child->ksp = &(child->kstack[SSIZE-28]);
   child->usp = running->usp;
@@ -118,14 +120,17 @@ int exec(char *cmdline)
 
   if (filename[0] != '/')
   {
-    strcpy(file, "/bin/bash");
+    strcpy(file, "/bin/");
   }
 
   strcat(file, filename);
 
   upa = running->pgdir[2048] & 0xffff0000;
+  upa = running->pgdir[2049] & 0xffff0000;
 
-  if (!loadelf(file, running))
+  // if (!loadelf(file, running))
+  //   return -1;
+  if (loadprogram(file, running) == FALSE)
     return -1;
   
   usp = upa + 1*MB - 128;
@@ -142,8 +147,21 @@ int exec(char *cmdline)
   return (int)running->usp;
 }
 
-int loadelf(char *file, PROC *process)
+int loadelf(char *file)
 {
   kprintf("Error: loadelf() is not yet implemented.\n");
   return FALSE;
+}
+
+int loadprogram(char *filename, PROC *process)
+{
+  byte buffer[BLKSIZE];
+  getblock(SUPERBLOCK, buffer);
+  SUPER *superblock = (SUPER *)buffer;
+  if (superblock->s_magic != EXT2FILESYSTEMTYPE) // I will not concede to magic numbers
+  {
+      return NULL;
+  }
+
+  return load(filename, process);
 }

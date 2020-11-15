@@ -8,7 +8,7 @@ int uPtable(PROC *process)
     u32 flag            = 0xC32;
     u32 entry           = 0x0;
 
-    for (i = 0; i < 2049; i++) { userPageTable[i] = NULL; }
+    for (i = 0; i < 2048; i++) { userPageTable[i] = NULL; }
 
     for (i = 0; i < 258; i++)
     {
