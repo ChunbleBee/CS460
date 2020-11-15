@@ -23,6 +23,7 @@ Consult Chapter 8 of text for reason WHY.
 #define enterCR  ps=int_off()
 #define exitCR   int_on(ps)
 
+#include "type.h"
 #include "sdc.h"
 u32 base;  //SDC base addres in I/O map
 

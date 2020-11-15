@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************/
 #pragma once
 
+#include "type.h"
 #include "keymap"
 #include "keymap2"
 
@@ -39,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define KDATA 0x08
 #define KCLK  0x0C
 #define KISTA 0x10
+
 extern PROC *running;
 
 typedef volatile struct kbd{

@@ -73,7 +73,7 @@ int loadInodeContentsIntoPageTable(INODE * pINode, PROC * process)
     kprintf("start program load\n");
     u32 index = 0, bytesLoaded = 0, pageIndex = 0;
     byte * procAddr = (byte *)(process->pgdir[2048] & ~0xC32); //&~0xc32 removes VA flag
-    printf("%x\t\t%x\n", procAddr, process->pgdir[2048]);
+    printf("%x\t\t%x\t%x\n", procAddr, process->pgdir[2048], process->pgdir[2049]);
 
     for (index = 0; index < 12; index++)
     {

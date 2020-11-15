@@ -14,7 +14,8 @@ int getpid()
   int pid;
   pid = syscall(0,0,0,0);
   return pid;
-}    
+}
+
 int getppid()
 { 
   return syscall(1,0,0,0);

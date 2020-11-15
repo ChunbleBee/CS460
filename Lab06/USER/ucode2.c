@@ -1,56 +1,135 @@
-int umenu()
+typedef unsigned char   u8;
+typedef unsigned short  u16;
+typedef unsigned int    u32;
+
+#include "string.c"
+#include "uio.c"
+int xia(int lr)
 {
-  uprintf("-------------------------------------------------------------\n");
-  uprintf("getpid getppid ps chname switch sleep wakeup kfork exit  wait\n");
-  uprintf("-------------------------------------------------------------\n");
+  printf("xia: lr=%x\n", lr);
 }
 
 int getpid()
 {
-    int pid;
-    pid = syscall(0,0,0,0);
-    return pid;
-}    
+  int pid;
+  pid = syscall(0,0,0,0);
+  return pid;
+}
 
 int getppid()
 { 
-    return syscall(1,0,0,0);
+  return syscall(1,0,0,0);
 }
 
-int ugetpid()
+int umenu()
 {
-    int pid = getpid();
-    uprintf("pid = %d\n", pid);
-}
-
-int ugetppid()
-{
-    int ppid = getppid();
-    uprintf("ppid = %d\n", ppid);
+  uprintf("-----------------------------\n");
+  uprintf("ps switch wait exit fork exec\n");
+  uprintf("-----------------------------\n");
 }
 
 int ups()
 {
-    return syscall(2,0,0,0);
+  return syscall(2,0,0,0);
 }
 
 int uchname()
 {
-    char s[32];
-    uprintf("input a name string : ");
-    ugets(s);
-    printf("\n");
-    return syscall(3,s,0,0);
+  char s[32];
+  uprintf("input a name string : ");
+  ugets(s);
+  printf("\n");
+  return syscall(3,s,0,0);
+}
+
+int ukfork()
+{
+  int pid;
+  pid = syscall(4,0,0,0);
+  uprintf("kforked child = %d\n", pid);
 }
 
 int uswitch()
 {
-    return syscall(4,0,0,0);
+  syscall(5,0,0,0);
+}
+
+int wait(int *status)
+{
+  return syscall(6, status,0,0);
+}
+
+int uwait()
+{
+  int pid, status;
+  uprintf("%d syscall6 to wait for ZOMBIE child\n", getpid());
+  pid = syscall(6, &status,0,0);
+  uprintf("%d waited for a ZOMBIE child=%d ", getpid(), pid);
+  if (pid>0)
+    uprintf("status=%x %d", status, status);
+  uprintf("\n");
+}
+
+int myexit(int value)
+{
+  syscall(7, value, 0,0);
+}
+
+int uexit()
+{
+  int value;
+  uprintf("input an exit value : ");
+  printf("\n");
+  value = geti();
+  syscall(7,value,0,0);
+}
+
+int ugetusp()
+{
+  return syscall(8,0,0,0);
+}
+
+int fork()
+{
+  return syscall(9,0,0,0);
+}
+
+int exec(char *line)
+{
+  return syscall(10, line,0,0);
+}
+
+int ufork()
+{
+  int pid;
+
+  pid = syscall(9,0,0,0);// can we find out the return PC here?
+  if (pid>0){
+    uprintf("parent %d forked a child %d\n", getpid(), pid);
+  }
+  if (pid==0){
+    uprintf("child %d return from fork(), pid=%d\n", getpid(), pid);
+  }  
+  if (pid < 0)
+    uprintf("%d fork failed\n", getpid());
+}
+
+int uexec()
+{
+  int r, mypid; 
+  char line[64];
+
+  uprintf("enter a command string : ");
+  ugets(line);
+  uprintf("line=%s\n", line);
+  r = syscall(10,line,0,0);
+  if (r<0)
+    uprintf("%d exec failed\n", getpid());
 }
 
 int ugetc()
 {
-    return syscall(90,0,0,0);
+  return syscall(90,0,0,0);
 }
 
 int uputc(char c)
@@ -60,56 +139,41 @@ int uputc(char c)
         c -= 'a';
         c += 'A';
     }
-
     return syscall(91,c,0,0);
+}
+
+int argc;
+char *argv[32];
+
+int token(char *line)
+{
+  int i;
+  char *cp;
+  cp = line;
+  argc = 0;
+  
+  while (*cp != 0){
+       while (*cp == ' ') *cp++ = 0;        
+       if (*cp != 0)
+           argv[argc++] = cp;         
+       while (*cp != ' ' && *cp != 0) cp++;                  
+       if (*cp != 0)   
+           *cp = 0;                   
+       else 
+            break; 
+       cp++;
+  }
+  argv[argc] = 0;
+}
+
+int main0(char *s)
+{
+  uprintf("main0: s = %s\n", s);
+  token(s);
+  main(argc, argv);
 }
 
 int getPA()
 {
-    return syscall(92,0,0,0);
-}
-
-int usleep()
-{
-    int pid = getpid();
-
-    if (pid==1){
-        printf("P1 does not sleep in Umode\n");
-        return -1;
-    }
-
-    printf("proc %d go to sleep in kernel\n", pid);
-    return syscall(5, pid, 0, 0);
-}
-
-int uwakeup()
-{
-    int pid;
-    printf("enter a pid to wakeup: ");
-    pid = geti();
-    printf("pid=%d\n", pid);
-    return syscall(6,pid,0,0);
-}
-
-int ukfork()
-{
-    return syscall(7, "u2", 0, 0);
-}
-
-int uexit()
-{
-    int value;
-    printf("enter an exit value : ");
-    value = geti();
-    syscall(8, value, 0, 0);
-}
-
-int uwait()
-{
-    int pid, status;
-    pid = syscall(9, &status, 0, 0);
-    printf("pid = %d ", pid);
-    if (pid > 0)
-        printf("status = %x",status);
-    printf("\n");
+  return syscall(92,0,0,0);
 }

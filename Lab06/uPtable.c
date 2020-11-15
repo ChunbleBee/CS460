@@ -8,7 +8,7 @@ int uPtable(PROC *process)
     u32 flag            = 0xC32;
     u32 entry           = 0x0;
 
-    for (i = 0; i < 2048; i++) { userPageTable[i] = NULL; }
+    for (i = 0; i < 2049; i++) { userPageTable[i] = NULL; }
 
     for (i = 0; i < 258; i++)
     {
@@ -16,7 +16,8 @@ int uPtable(PROC *process)
         entry += MB;
     }
 
-    userPageTable[2048] = ((8*MB) + (process->pid-1)*MB) | flag;
+    userPageTable[2048] = ((7*MB) + (process->pid)*MB) | flag;
+    userPageTable[2049] = ((16*MB) + (process->pid)*MB) | flag;
 
     process->pgdir = userPageTable;
 }

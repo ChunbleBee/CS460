@@ -28,6 +28,7 @@ int color;
 #include "exceptions.c"
 #include "queue.c"
 #include "kernel.c"
+#include "ForkExec.c"
 #include "wait.c"
 #include "sdc.c"
 

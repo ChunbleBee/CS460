@@ -16,13 +16,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "type.h"
+
 extern PROC proc[], *running, *readyQueue, *sleepList, *freeList;
 extern int printQ(PROC *p);
 extern int printSleepList(PROC *p);
 extern int printList(PROC *p);
 extern int printSiblingList(PROC *p);
 extern int tswitch();
-extern int kfork(char* process);
+extern PROC *kfork(char* process);
 
 int ktswitch()
 {
@@ -37,6 +38,11 @@ int kgetpid()
 int kgetppid()
 {
     return running->ppid;
+}
+
+int kgetusp()
+{
+    return running->usp;
 }
 
 char *pstatus[]={"FREE   ","READY  ","SLEEP  ","BLOCK  ","ZOMBIE", " RUN  "};
@@ -71,12 +77,13 @@ int svc_handler(int a, int b, int c, int d)
         case 1: r = kgetppid();         break;
         case 2: r = kps();              break;
         case 3: r = kchname((char *)b); break;
-        case 4: r = ktswitch();         break;
-        case 5: r = ksleep(b);          break;
+        case 4: r = kfork((char *) b);  break;
+        case 5: r = ktswitch();         break;
         case 6: r = kwakeup(b);         break;
-        case 7: r = kfork((char *) b);  break;
-        case 8: r = kexit(b);           break;
-        case 9: r = kwait(b);           break;
+        case 7: r = kexit(b);           break;
+        case 8: r = kgetusp(b);         break;
+        case 9: r = fork();             break;
+        case 10: r = exec(b);           break;
 
         case 90: r = kgetc();           break;
         case 91: r = kputc(b);          break;
