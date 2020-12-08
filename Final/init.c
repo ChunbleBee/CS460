@@ -1,10 +1,6 @@
 #pragma once
+#include "TypesAndDefs.h"
 #include "ucode.c"
-#define CHILDPROCESS 0
-
-typedef enum bool {false, true};
-typedef int ProcID;
-typedef int FileDesc;
 
 void main(int argc, char* argv[])
 {

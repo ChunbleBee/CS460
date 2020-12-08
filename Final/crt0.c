@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
     token() breaks up a string into argc of tokens, pointed by argv[]
 */
+#pragma once
 /*  #include "uinclude.h" */
 
 int argc;

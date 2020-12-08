@@ -1,3 +1,6 @@
+#pragma once
+#include "TypesAndDefs.h"
+
 int bcopy(const void *src, void *dest, unsigned int n) {
 	const char *s = (const char *)src;
 	char *d = (char *)dest;
@@ -115,6 +118,39 @@ char *strstr(char *s1, char *s2)
   return 0;
 }
 
+// I believe I wrote this earlier in the semester?
+// If not, this is KC's code with my style on top.
+char *strtok(char *string, char delim)
+{
+  static char *oldstring;
+  char * output;
+
+  if (string == NULL)
+  {
+    string = oldstring;
+  }
+
+  if (*string == '\0')
+  {
+    return NULL;
+  }
+
+  output = string;
+  while(*string != '\0' && *string != delim)
+  {
+    string++;
+  }
+
+  if (*string == delim)
+  {
+    *string = '\0';
+    string++;
+  }
+
+  printf("    return token: %s\n", output);
+  oldstring = string;
+  return output;
+}
 
 int setzero(char *dst, int size)
 {
