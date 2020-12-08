@@ -19,7 +19,7 @@ void main(int argc, char* argv[])
 
     if (Console == CHILDPROCESS)
     {
-        exec("login /dev/ttyS0");
+        exec("login /dev/tty0");
     }
 
     // If we're at this point, this is the parent console process //
