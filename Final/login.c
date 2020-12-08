@@ -39,7 +39,6 @@ UserInfo ParsePasswordLine(char* line)
     return info;
 }
 
-// Bugs out at end of file, but init() forks a new one, so fudge it?
 int main(int argc, char* argv[])
 {
     FileDesc in, out, err, passwd;
@@ -80,7 +79,7 @@ int main(int argc, char* argv[])
 
             printf("<-- outside parse-->\n");
             printf("%s, %s\n", name, password);
-            printf("username to test: %s", user.UserName);
+            printf("username to test: %s\n", user.UserName);
             if (strcmp(name, user.UserName) == 0 && strcmp(password, user.Password) == 0)
             {
                 printf("Login Successful - Hello %s\n\tExecuting %s\n",
