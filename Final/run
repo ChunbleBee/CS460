@@ -1,9 +1,1 @@
-qemu-system-arm -M versatilepb -m 256M -sd sdimage -kernel t.bin -serial mon:stdio #-serial /dev/pts/2
-
-
-
-
-
-
-
-
+qemu-system-arm -M versatilepb -m 256M -sd sdimage.img -kernel t.bin -serial mon:stdio #-serial /dev/pts/2
