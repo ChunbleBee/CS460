@@ -39,6 +39,7 @@ UserInfo ParsePasswordLine(char* line)
     return info;
 }
 
+// Bugs out at end of file, but init() forks a new one, so fudge it?
 int main(int argc, char* argv[])
 {
     FileDesc in, out, err, passwd;
@@ -71,10 +72,10 @@ int main(int argc, char* argv[])
             lines[i] = strtok(NULL, '\n');
         }
 
-        for (int i = 0; i < 20 || lines[i] == NULL; i++)
+        for (int i = 0; i < 20 && lines[i] != NULL; i++)
         {
             char* line = lines[i];
-            printf("line to parse: %s", line);
+            printf("line to parse: %s\n", line);
             UserInfo user = ParsePasswordLine(line);
 
             printf("<-- outside parse-->\n");
