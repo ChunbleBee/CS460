@@ -6,43 +6,62 @@ char catline[1024];
 
 int main(int argc, char* argv[])
 {
-    // there's a file name
-    if (argc > 1)
+    int readbytes;
+    bool isTerm = false;
+
+    gettty(tty);
+    stat(tty, &myst);
+    fstat(0, &st0);
+    fstat(1, &st1);
+
+    if (st0.st_ino == myst.st_ino && st1.st_ino == myst.st_ino)
     {
-        FileDesc file = open(argv[1], O_RDONLY);
-        printfile(file);
-        close(file);
+        // printf("===== we're in here =====\n");
+        isTerm = true;
     }
     else
     {
-        printStdIn();
+        isTerm = false;
+        // printf(";;;;; we didn't get in there ;;;;;");
     }
-}
+    
 
-void printStdIn()
-{
-    strcpy(catline, "");
-    int readbytes = read(stdin, catline, 1024);
-    while (readbytes > 0)
+    // there's a file
+    if (argc > 1)
     {
-        for(int i = 0; i < readbytes; i++)
-        {
-            write(stdout, catline, readbytes);
-        }
-        strcpy(catline, "");
-        readbytes = read(stdin, catline, 1024);
-    }
-}
-
-void printfile(FileDesc file)
-{
-    int readbytes = read(file, catline, 1024);
-    while (readbytes > 0)
-    {
-        for (int i = 0; i < readbytes; i++)
-        {
-            mputc(catline[i]);
-        }
+        FileDesc file = open(argv[1], O_RDONLY);
         readbytes = read(file, catline, 1024);
+        while(readbytes > 0)
+        {
+            if (isTerm)
+            {
+                prints(catline);
+            }
+            else
+            {
+                write(file, catline, 1024);
+            }
+
+            readbytes = read(file, catline, 1024);
+        }
+
+        printf("\n");
+    }
+    else
+    {
+        int bytesread = read(stdin, catline, 1024);
+        while(bytesread > 0)
+        {
+            if (isTerm)
+            {
+                printf("\n%s\n", catline);
+            }
+            else
+            {
+                write(stdout, catline, strlen(catline));
+            }
+            
+            bytesread = read(stdin, catline, 1024);
+        }
     }
 }

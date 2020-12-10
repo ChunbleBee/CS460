@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 
     while (true)
     {
-        printf(":>");
+        printf("<3: ");
         gets(line);
         if (strcmp(line, "exit") == 0)
         {
@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
         else
         {
             wait(&p);
+            sync();
         }
         
     }
@@ -57,23 +58,27 @@ void InterpretLine(char* line)
 
         *next = '\0';
         next++;
+        while(*next == ' ')
+        {
+            next++;
+        }
 
         FileDesc pipes[2];
         pipe(pipes);
-        ProcID slave = fork();
-
-        if (slave == CHILDPROCESS)
+        ProcID childID = fork();  //child process, childID = 0
+                                // parent rocess, childID = procid of child
+        if (childID == CHILDPROCESS)
         {
             close(stdout);
-            dup(pipes[1]);
-            close(pipes[0]);
+            dup(pipes[stdout]);
+            close(pipes[stdin]);
         }
         else
         {
             close(stdin);
-            dup(pipes[0]);
-            close(pipes[1]);
-            wait(&slave);
+            dup(pipes[stdin]);
+            close(pipes[stdout]);
+            wait(&childID);
             InterpretLine(next);
             exit(0);
         }
@@ -83,39 +88,55 @@ void InterpretLine(char* line)
 
     if (*redirect != '\0')
     {
-        printf("<--- IORedirect --->\n");
-        if (*redirect == '<')
+        char c = *redirect;
+        *redirect = '\0';
+        redirect++;
+        FileDesc file = -1;
+
+        if (c == '<')
         {
-            *redirect = '\0';
-            FileDesc file = open((redirect + 1), O_RDONLY);
+            while(*redirect == ' ')
+            {
+                redirect++;
+            }
+
+            file = open(redirect, O_RDONLY);
+
             close(stdin);
-            dup(file);
         }
-
-        if (*redirect == '>')
+        else if (c == '>')
         {
-            bool append = *(redirect + 1) == '>';
-            *redirect = '\0';
-            redirect++;
+            bool append = (*redirect == '>');
+            u32 flags = (O_WRONLY | O_CREAT);
 
-            int flags = (O_WRONLY | O_CREAT);
             if (append == true)
             {
-                printf("<--- Append mode --->\n");
                 redirect++;
-                flags |= O_APPEND;
+                flags = (O_WRONLY | O_APPEND);
             }
-            else
+
+            while(*redirect == ' ')
             {
-                printf("<--- Truncate mode --->\n");
-                flags |= O_TRUNC;
+                redirect++;
             }
-            printf("<--- File to open: %s --->\n", redirect);
-            FileDesc file = open(redirect, flags);
+
+            file = open(redirect, flags);
+            if (file < 0)
+            {
+                creat(redirect);
+                file = open(redirect, flags);
+            }
+
             close(stdout);
+        }
+
+        if (file >= 0)
+        {
             dup(file);
         }
     }
-    printf("<--- EXECUTE --->\n");
+    
+    //printf("<--- EXECUTE --->\n");
     int output = exec(cmd);
+    exit(0);
 }

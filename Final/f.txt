@@ -1,0 +1,464 @@
+<Title>460 Class Notes</Title>
+<Body bgcolor="#00cccc" text="#000000">
+
+<H1>460 Last LAB ASSIGNMENT</H1>
+
+<Pre>
+                     LAST LAB ASSIGNMENT
+                   DUE and DEMO: CLOSE WEEK
+      
+0. MTX in ~samples/LAST/mtx.gz:
+
+   Download the files in ~samples/LAST/ directory.
+   mtx.gz is the MTX that can be run on real PC or dosemu or vmware.
+   Other files are helps to the last assignment.
+
+1. Syscalls in MTX Kernel
+
+The following table lists the syscall numbers and functions of the MTX kernel.
+The functions are (almost) identical to their counterparts in Unix. The entries
+marked with * are exceptions as noted below.
+
+  Number          Function 
+  ---       --------------------------
+   0         pid = getpid()
+   1         ps()                          // ps in Kmode
+   2         chname(char *newname)
+   3         kmode()                       /* go Kmode */   
+   4         switch()                      /* switch task */  
+
+   5         pid = ufork()                 /* fork an identical child task */ 
+*  6         exec(char *cmdLine)           /* change image to filename */
+
+  20         pid = wait(int *status)       /* wait for child to die */ 
+  21         mkdir(char *dirname)
+  22         rmdir(char *dirname)
+* 23         creat(char *filename)
+  24         rm(char *filename)
+
+  26         chdir(char *dirname)
+
+* 28         fd = open(char *filename, int mode)  /* mode=0|1|2|3 */
+  29         close(int fd)
+* 30         lseek(int fd, long offset)
+
+  33         chmod(char *filename, 0xxx);
+  34         chown(char *filename, int uid);
+  35         n =  read(fd, buf, nbytes)
+  36         n = write(fd, buf, nbytes)
+
+  38         stat(char *filename, struct stat *s) 
+  39         getcwd(char *s)            /* get cwd string */
+  40         pipe(int pd[2])                    
+  41         dup(fd)
+  42         dup2(fd1, fd2)
+  43         ps()                      // print proc status in Kmode
+  44         uid=getuid();             // getuid
+  45         setuid(int uid);          // set uid  
+  46         gettty(char *tty);        // get /dev/ttyX string
+  47         settty(char *tty);        // set PROC.tty string
+  48         fstat(int fd, struct stat *s);   // stat a file descriptor
+
+  50         kill(int signal#, int pid)           // deliver signal to pid
+  51         signal(int signal#, void catcher())  // install catcher()
+
+  52         sleep(int t)                   // pause for t seconds
+  53         settimer(int t)                // set timer for t seconds
+
+  90          sync()                        // flush I/O buffers to disk
+
+  96          hits                          // buffer cache hit ratio
+
+  99          exit(value);                  /* enter kernel to die */    
+=============================================================================
+
+                     EXCEPTIONS:
+
+     exec(char *cmdLine):    Recall that in Unix if you enter a cmdLine
+                                     a.out  arg1  arg2 ... argn
+     it is used in execl() as
+                                execl(a.out, a.out, arg1, arg2,...,argn, 0);
+     OR as argc, argv[] in      execve(argc, argv);
+
+     In our MTX, the entire cmdLine is used in the exec() call.
+     For example, if you enter     cat /a/b/c/d     to sh (kcsh, that is), 
+     the entire line  "cat /a/b/c/d"  is used in the exec() syscall.  
+     Furthermore, the entire line is passed to the new image, which can be 
+     written as
+
+             !============= u.s file =======================
+                    .globl _main0, _exit
+
+              auto_start:
+              exprot auto_start
+              
+                        call   _main0
+                        push   #0
+                        call   _exit
+
+
+             //********** crt0.c file *******************
+             main0(cmdLine) char *cmdLine;    /* bcc style C */
+             {
+                 // parse cmdLine as argv[0], argv[1],...., argv[n]
+                 //       int argc =  |<------ argc ------------|
+                 main(argc, argv);
+             }
+
+             //************ cat.c file ******************
+             main(argc, argv) int argc; char *argv[];
+             {
+                // argv[0] = "cat"; argv[1] = "/a/b/c/d"
+             }
+
+
+     As shown above, in main0(), you can recover the original cmdLine = "cat /a/b/c/d"
+     and parse it into argc and argv[]. Then call main(argc, argv) as in standard C.
+
+     For your convenience, the crt0.c file is posted in the samples directory.  
+
+     -------------------------------------------------------------------- 
+     creat(char *filename) :  default file permissions=0644
+     --------------------------------------------------------
+     fd = open(char *filename, int mode) : mode=0/1/2/3 for r/w/rw/append
+     ------------------------------------------------------------
+     lseek(int fd, long offset) : always from beginning of opened file
+     -------------------------------------------------------------
+
+2. Operation of the MTX system:
+
+   Download ~samples/SH/mtx.gz, dd it to a FF disk. The MTX image supports all 
+   the syscalls listed above.
+
+   When MTX starts, it will try to mount /dev/fd0 as the root file system.
+   Thus, the boot disk must be a valid EXT2 file system with the following 
+   contents:
+
+               /|
+                |----bin/ : All binary executables are in /bin
+                |
+                |---dev/ : special files tty0  c 4 0 
+                |                        ttyS0 c 5 0 
+                |                        ttyS1 c 5 1   
+                |                        lp0   c 6 0
+                |---etc/ : passwd file 
+                |           
+                |---boot/: bootable MTX images
+                |
+                |---user/: users HOME directories
+  
+  After mounting the root file system, P0 creats P1, whose Umode image is 
+  the /bin/init program. P1 will go Umode directly to execute /bin/init, 
+  in which it forks children P2 on /dev/tty0, P3 /dev/ttyS0 and P4 on 
+  /dev/ttyS1. Then P1 waits for any child proc to die.
+  Henceforth, P1 plays the role of the INIT process (P1) in Unix.
+
+                          Proc#2:
+  (1). P2 is a login process. It executes /bin/login on the console
+       terminal /dev/tty0. So the special file /dev/tty0 MUST exist.
+       To support serial terminals and printer, /dev/ttyS0, /dev/ttyS1 
+       and /dev/lp0 must also exist.
+
+  (2). In /bin/login, P2 opens its tty special file (/dev/tty0) as stdin,
+       stdout and stderr. Then it displays (to its stdout)
+                  login: 
+
+  and waits for a user to login.  When a user tries to login, it reads the
+  user name and password (from its stdin), opens the /etc/passwd file to 
+  authenticate the user.  Each line of /etc/passwd has the format:
+
+          username:password:gid:uid:fullname:HOMEDIR:program
+  e.g.    root:xxxxxxx:1000:0:superuser:/root:sh
+
+  (Use plain text for password OR devise your own encryption schemes)
+
+  If the user has a valid account in /etc/passwd, P2 becomes his/her
+  process. It chdir to user's HOMEDIR and execute the listed program, 
+  such as sh (/bin/sh).
+ 
+  (3). then (in sh) it loops forever (until "logout" or Contro-D):
+        {
+           prompts for a command line, e.g. cmdLine="cat filename"
+           if (cmd == "logout") 
+              syscall to die;
+
+           // if just ONE cmd:  
+           pid = fork();
+           if (pid==0)
+               exec(cmdLine);
+           else
+               pid = wait(&status);
+        }    
+
+   (3). When the child proc terminates (by exit() syscall to MTX kernel), 
+        it wakes up sh, which prompts for another cmdLine, etc.
+
+   (4). When sh dies, it wakes up its parent, INIT, which forks another
+        login process.         
+==========================================================================
+
+3. OBJECTIVES:
+   The purpose of this assignment is for you to write YOUR OWN 
+   INIT, login, sh and other user command programs. Among these, sh is the
+   most important. Accordingly, it will carry the most weight. A sample sh.c 
+   is shown here to help you get started:
+ 
+char cmdLine[64];
+
+#include "ucode.c"       /* contains utility functions */
+
+int menu()
+{
+  printf("#############################################################\n");
+  printf("#  ls       cd     pwd    cat   more    cp     mv   >   >>  #\n");
+  printf("#  mkdir    rmdir  creat  rm    chmod   chown  lpr  <   |   #\n");
+  printf("#############################################################\n");
+}
+
+main(argc, argv) int argc; char *argv[];
+{
+  int stdin, stdout, stderr, i, j, pid, cid, me, status;
+
+  me = getpid();
+  printf("Enter ? for help menu\n");
+  while(1){
+     printf("input command : ");
+     gets(cmdLine);
+     if (cmdLine[0]==0)
+         continue;
+
+     token(cmdLine);   /* break up cmdLine into name[0], name[1],.... */
+
+     if (strcmp(name[0], "?")==0 || strcmp(name[0], "help")==0){
+        menu(); continue;
+     }
+
+     if (strcmp(name[0], "logout")==0)
+         exit(0);
+
+     /****************************************************************
+        NOTE: some commands, e.g. cd, MUST be done by sh itself.
+              OTHER commands will be done as shown below:
+      ****************************************************************/
+        
+     /***** fork a child to execute the command ******/
+     pid = fork();
+     if (pid){
+         printf("parent sh waits for child to die\n");
+         pid = wait(&status);
+     }
+     else{
+         printf("child task %d exec to %s\n", getpid(), name[0]);
+            exec(cmdLine);
+         printf("exec failed\n");
+     }
+  }
+}
+
+=============================================================================
+
+As usual, you must compile sh.c and link it with u.s crt0.o to generate an 
+executable a.out. NOTE that every a.out must have a header because my loader 
+needs the file header for sizes to allocate memory) to /fd0/bin/sh 
+
+                  A sample u.s file is shown below.
+
+|======================================================================
+|                            u.s file
+|======================================================================	
+
+.globl begtext, begdata, begbss            | needed by linker
+
+.globl _main, _syscall, _exit0             | IMPORT EXPORT symbols
+
+.text                                      | these tell as:	
+begtext:                                   | text,data,bss segments
+.data                                      | are all the same.
+begdata:
+.bss
+begbss:
+.text     
+auto_start:
+export auto_start          
+
+        call _main0
+
+        push #0
+        call _exit                          | call exit(0) to die
+	
+_syscall:
+        int  80
+        ret
+
+|======================================================================
+
+In addition to sh.c, I used a separate ucode.c file for the common utility 
+functions, such as 
+                     gets(), printf()
+and the (MODIFIED)   getc()/putc()    functions using stdin and stdout. 
+
+         int getc()
+         {
+             int c;
+             read(0, &c, 1);
+             return (c & 0x7F);
+         }
+
+         int putc(c) int c;
+         {
+             write(1, &c, 1);
+         }
+
+NOTE!!! these are NO LONGER calls to BIOS anymore, but read/write syscalls 
+to the MTX kernel. It depends on what the file descriptors 0 and 1 are at 
+this moment, which may NOT be /dev/tty0. This makes I/O redirection possible.
+============================================================================
+
+4. Command Programs:
+
+   Each of the commands (except >, <, >>, |) shown in the Menu is an executable
+   file in the /bin directory. The programs are developed in exactly the same 
+   way as that of sh.  For example, the mkdir program is shown below.
+
+=====================  mkdir.c  file  ==============================
+#include "ucode.c"
+
+main(argc, argv) int argc; char *argv[];
+{
+    printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+    printf("      This is KCW's mkdir in action          \n");
+    printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+
+
+    /* for the mkdir program, the original cmdLine = "mkdir dirname"
+    if (argc < 2)
+        /* show usage and exit(1) */
+    }
+
+    if ( mkdir(argv[1]) < 0)  /* which is  syscall(21, argv[1], 0, 0);  */ 
+       printf("mkdir OK\n");
+    else
+       printf("mkdir failed\n");
+}
+==============================================================================
+
+Similarly for other commands.
+
+
+                      5. ASSIGNMENTS:
+                     DUE in CLOSED week
+                    ORAL EXAM during DEMO
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+5-1. Develop YOUR OWN programs for
+             init                    // for process P1 
+             login                   // for login processes
+             cat   [filename]        /* cat filename or stdin to stdout */
+             more  filename          /* more as in Unix                   */
+             grep  pattern filename  /* print lines containing pattern    */ 
+             cp    f1  f2
+
+5-2. Write YOUR OWN sh.c to support I/O redirections and pipes:
+
+     Examples:  cat [filename] >  newfile 
+                cat [filename] >> appendFile                           
+                a.out < inFile   /* read inputs from inFile */
+                cat filename | more
+                cat filename | grep test
+                cat filename | grep print | more
+
+                cat filename > /dev/lp0   /* print filename */
+                cp  filename /dev/lp0     /* print filename */
+   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
+//*************************************************************************
+//                      Logic of init.c 
+// NOTE: this init.c creates only ONE login process on console=/dev/tty0
+// YOUR init.c must also create login processes on serial ports /dev/ttyS0
+// and /dev/ttyS1.. 
+//************************************************************************
+
+int pid, child, status;
+int stdin, stdout;
+
+#include "ucode.c"
+
+main(argc, argv) int argc; char *argv[];
+{
+   // open /dev/tty0 as 0 (READ) and 1 (WRTIE) in order to display messages
+   stdin  = open("/dev/tty0", 0);
+   stdout = open("/dev/tty0", 1);
+
+   // Now we can use printf, which calls putc(), which writes to stdout
+   printf("KCINIT : fork a login task on console\n"); 
+   child = fork();
+
+   if (child)
+       parent();
+   else  /* login task */
+       login();
+}       
+
+int login()
+{
+  exec("login /dev/tty0");
+}
+      
+int parent()
+{
+  while(1){
+    printf("KCINIT : waiting .....\n");
+
+    pid = wait(&status);
+
+    if (pid == child)
+        fork another login child
+    else
+        printf("INIT : buried an orphan child %d\n", pid);
+
+  }
+}
+
+
+//***********************************************************************
+//                   LOGIC of login.c file
+//***********************************************************************
+char *tty;
+
+main(argc, argv) int argc; char *argv[];   // invoked by exec("login /dev/ttyxx")
+{
+  tty =  argv[1];
+
+  // close 0, 1, 2 in case INIT opened them before
+  close(0); close(1); close(2);
+
+  // open tty (passed in by INIT) as stdin, stdout, stderr
+  stdin  = open(tty, 0);
+  stdout = open(tty, 1);
+  stderr = open(tty, 1);
+
+  settty(tty);   // store tty string in PROC.tty[] for putc()
+
+  // NOW we can use printf, which calls putc() to our tty
+  printf("KCLOGIN : open %s as stdin, stdout, stderr\n", tty);
+
+  signal(2,1);  // syscall(51, 2, 1); ignore Control-C interrupts so that 
+                // Control-C KILLs other procs on this tty but not the main sh
+
+  while(1){
+    1. show login:           to stdout
+    2. read user nmae        from stdin
+    3. show passwd:
+    4. read user passwd
+
+    5. verify user name and passwd from /etc/passwd file
+
+    6. if (user account valid){
+          setuid to user uid.
+          chdir to user HOME directory.
+          exec to the program in users's account
+       }
+       printf("login failed, try again\n");
+  }
+}

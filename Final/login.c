@@ -50,13 +50,14 @@ int main(int argc, char* argv[])
 
     close(stdin);
     close(stdout);
-    close(stderror);
+    close(stderr);
 
     in = open(argv[1], O_RDONLY);
     out = open(argv[1], O_WRONLY);
     err = open(argv[1], O_RDWR);
 
     settty(argv[1]);
+    gettty(tty);
 
     passwd = open("/etc/passwd", O_RDONLY);
 

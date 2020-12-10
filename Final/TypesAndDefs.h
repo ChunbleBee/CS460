@@ -3,7 +3,7 @@
 #define NULL ((void*) 0)
 #define stdin 0
 #define stdout 1
-#define stderror 2
+#define stderr 2
 
 #define BUFFERLEN 4000
 #define MAXPATH 4096
