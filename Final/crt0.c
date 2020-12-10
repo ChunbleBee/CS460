@@ -45,7 +45,7 @@ void token(char *line)
   argv[argc] = 0;
 }
 
-void showarg(int argc, char *argv[ ])
+void showarg(int argc, char* argv[])
 {
   int i;
   printf("argc=%d ", argc);

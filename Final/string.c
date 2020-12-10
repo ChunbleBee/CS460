@@ -118,9 +118,38 @@ char *strstr(char *s1, char *s2)
   return 0;
 }
 
+char* findNextDelim(char* string, char* delim)
+{
+  bool found = false;
+
+  while(*string != '\0' && found == false)
+  {
+    char* d = delim;
+
+    while(*d != '\0' && found == false)
+    {
+      if (*string == *d)
+      {
+        found = true;
+      }
+      else
+      {    
+        d++;
+      }
+    }
+
+    if (*string != *d)
+    {
+      string++;
+    }
+  }
+
+  return string;
+}
+
 // I believe I wrote this earlier in the semester?
 // If not, this is KC's code with my style on top.
-char *strtok(char *string, char delim)
+char *strtok(char *string, char* delim)
 {
   static char *oldstring;
   char * output;
@@ -136,12 +165,9 @@ char *strtok(char *string, char delim)
   }
 
   output = string;
-  while(*string != '\0' && *string != delim)
-  {
-    string++;
-  }
+  string = findNextDelim(string, delim);
 
-  if (*string == delim)
+  if (*string != '\0')
   {
     *string = '\0';
     string++;
