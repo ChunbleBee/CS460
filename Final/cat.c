@@ -6,32 +6,23 @@ char catline[1024];
 
 int main(int argc, char* argv[])
 {
-    int readbytes;
-    bool isTerm = false;
+    int bytesread;
+    bool isTerm;
 
     gettty(tty);
     stat(tty, &myst);
     fstat(0, &st0);
     fstat(1, &st1);
 
-    if (st0.st_ino == myst.st_ino && st1.st_ino == myst.st_ino)
-    {
-        // printf("===== we're in here =====\n");
-        isTerm = true;
-    }
-    else
-    {
-        isTerm = false;
-        // printf(";;;;; we didn't get in there ;;;;;");
-    }
-    
+    isTerm = (st0.st_ino == myst.st_ino && st1.st_ino == myst.st_ino);
 
     // there's a file
     if (argc > 1)
     {
         FileDesc file = open(argv[1], O_RDONLY);
-        readbytes = read(file, catline, 1024);
-        while(readbytes > 0)
+        bytesread = read(file, catline, 1024);
+
+        while(bytesread > 0)
         {
             if (isTerm)
             {
@@ -39,17 +30,17 @@ int main(int argc, char* argv[])
             }
             else
             {
-                write(file, catline, 1024);
+                write(stdout, catline, bytesread);
             }
 
-            readbytes = read(file, catline, 1024);
+            bytesread = read(file, catline, 1024);
         }
 
         printf("\n");
     }
     else
     {
-        int bytesread = read(stdin, catline, 1024);
+        bytesread = read(stdin, catline, 1024);
         while(bytesread > 0)
         {
             if (isTerm)
@@ -58,9 +49,9 @@ int main(int argc, char* argv[])
             }
             else
             {
-                write(stdout, catline, strlen(catline));
+                write(stdout, catline, bytesread);
             }
-            
+
             bytesread = read(stdin, catline, 1024);
         }
     }

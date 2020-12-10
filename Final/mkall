@@ -1,0 +1,7 @@
+./mku init
+./mku login
+./mku sh
+./mku echo
+./mku cat
+
+./run

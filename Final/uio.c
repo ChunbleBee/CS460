@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /***********************************************************************
                       io.c file of MTX
 ***********************************************************************/
+#pragma once
+
 char space = ' ';
 char *ctable = "0123456789ABCDEF";
 char cr = '\r';
