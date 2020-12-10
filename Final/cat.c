@@ -11,15 +11,23 @@ int main(int argc, char* argv[])
 
     gettty(tty);
     stat(tty, &myst);
-    fstat(0, &st0);
-    fstat(1, &st1);
+    fstat(stdout, &st1);
 
-    isTerm = (st0.st_ino == myst.st_ino && st1.st_ino == myst.st_ino);
+    isTerm = (st1.st_ino == myst.st_ino);
 
     // there's a file
-    if (argc > 1)
+    if (isTerm == false || argc > 1)
     {
-        FileDesc file = open(argv[1], O_RDONLY);
+        FileDesc file;
+        if (argc > 1)
+        {
+            file = open(argv[1], O_RDONLY);
+        }
+        else
+        {
+            file = stdin;
+        }
+        
         bytesread = read(file, catline, 1024);
 
         while(bytesread > 0)
@@ -35,24 +43,15 @@ int main(int argc, char* argv[])
 
             bytesread = read(file, catline, 1024);
         }
-
-        printf("\n");
     }
-    else
+    else //Only Interactive mode. Hopefully.
     {
-        bytesread = read(stdin, catline, 1024);
-        while(bytesread > 0)
+        char c;
+        int i = 0;
+        while (gets(catline) > 0)
         {
-            if (isTerm)
-            {
-                printf("\n%s\n", catline);
-            }
-            else
-            {
-                write(stdout, catline, bytesread);
-            }
-
-            bytesread = read(stdin, catline, 1024);
+            prints(catline);
+            printc('\n');
         }
     }
 }

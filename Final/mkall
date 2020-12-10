@@ -1,7 +1,14 @@
+echo "-------------- Reinitializing SDCard Image --------------"
+rm sdimage.img
+cp initimage.img sdimage.img
+
+echo "-------------- Compiling all files --------------"
 ./mku init
 ./mku login
 ./mku sh
 ./mku echo
 ./mku cat
+./mku ls
 
+echo "-------------- Starting Qemu --------------"
 ./run
