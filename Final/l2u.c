@@ -5,8 +5,17 @@
 int main(int argc, char* argv[])
 {
     FileDesc src, dest;
+    bool pipeIn, pipeOut;
 
-    if (argc == 1)
+    gettty(tty);
+    stat(tty, &myst);
+    fstat(stdin, &st0);
+    fstat(stdout, &st1);
+
+    pipeIn = (st0.st_ino == myst.st_ino);
+    pipeOut = (st1.st_ino == myst.st_ino);
+
+    if (argc == 1 && pipeOut == false && pipeIn == false)
     {
         printf("Usage: l2u [SRC] [DEST]\n");
     }
@@ -21,8 +30,15 @@ int main(int argc, char* argv[])
             src = stdin;
         }
         
-        dest = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC);
-
+        if (pipeOut == false)
+        {
+            dest = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC);
+        }
+        else
+        {
+            dest = stdout;
+        }
+        
         char c;
         int readbytes = read(src, &c, 1);
 
