@@ -53,8 +53,6 @@ int main(int argc, char* argv[])
     }
     else //Only Interactive mode. Hopefully.
     {
-        char c;
-        int i = 0;
         while (gets(catline) > 0)
         {
             prints(catline);

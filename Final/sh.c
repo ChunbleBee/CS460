@@ -81,6 +81,7 @@ void InterpretLine(char* line)
         }
     }
 
+
     char* redirect = findNextDelim(cmd, "<>");
 
     if (*redirect != '\0')

@@ -6,17 +6,17 @@ int main(int argc, char* argv[])
 {
     char buffer[1024];
     FileDesc file;
-    bool fromTerm, toTerm;
+    bool fromTerm, inTerm;
 
     gettty(tty);
     stat(tty, &myst);
-    //fstat(stdin, &st0);
+    fstat(stdin, &st0);
     fstat(stdout, &st1);
 
-    //fromTerm = (st0.st_ino == myst.st_ino);
-    toTerm = (st1.st_ino == myst.st_ino);
+    fromTerm = (st0.st_ino == myst.st_ino);
+    inTerm = (st1.st_ino == myst.st_ino);
 
-    if (argc < 2 && toTerm == true)
+    if (argc < 2 && inTerm == true)
     {
         printf("Usage: grep PATTERNS [FILE]...");
         exit(0);
@@ -35,29 +35,45 @@ int main(int argc, char* argv[])
         file = stdin;
     }
 
-    int i = 0;
-    char c;
-
-    while(read(file, &c, 1) > 0)
+    if (argc > 2 || inTerm == false)
     {
-        if(i < 1024 && c != '\n')
-        {
-            buffer[i] = c;
-            i++;
-        }
-        else
-        {
-            buffer[i] = '\0';
-            char *ch = strstr(buffer, pattern);
+        int i = 0;
+        char c;
 
-            if (ch > 0)
+        while(read(file, &c, 1) > 0)
+        {
+            if(i < 1024 && c != '\n')
             {
-                printf("%s\n", buffer);
+                buffer[i] = c;
+                i++;
             }
+            else
+            {
+                buffer[i] = '\0';
+                char *ch = strstr(buffer, pattern);
 
-            i = 0;
+                if (ch > 0)
+                {
+                    printf("%s\n", buffer);
+                }
+
+                i = 0;
+            }
         }
     }
+    else
+    {
+        while (gets(buffer) > 0)
+        {
+            char *ch = strstr(buffer, pattern);
+            if (ch)
+            {
+                prints(buffer);
+                printc('\n');
+            }
+        }
+    }
+    
 
     exit(0);
 }

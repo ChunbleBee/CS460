@@ -118,12 +118,12 @@ int strncmp(char *s1, char *s2, int n)
 
 char *strstr(char *s1, char *s2)
 {
-  /* s1="....abc...", s2="abc" ==> find first occurrence of "abc" */
-
-  int i, len;
+  int i, len, length;
   len = strlen(s2);
+  length = strlen(s1)-strlen(s2) + 1;
 
-  for (i=0; i<strlen(s1)-strlen(s2); i++){
+  for (i=0; i < length; i++)
+  {
     if (strncmp(&s1[i], s2, len)==0)
          return &s1[i];
   }
