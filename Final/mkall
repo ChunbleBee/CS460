@@ -9,6 +9,7 @@ echo "-------------- Compiling all files --------------"
 ./mku echo
 ./mku cat
 ./mku ls
+./mku more
 
 echo "-------------- Starting Qemu --------------"
 ./run

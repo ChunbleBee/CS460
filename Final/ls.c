@@ -2,55 +2,50 @@
 #include "ucode.c"
 #include "TypesAndDefs.h"
 
-STAT current;
-DIR  curdir;
-char dirbuff[4096];
-
 int main(int argc, char* argv[])
 {
+    STAT current;
+    char dirnamebuff[4096];
+
     printf("<----- ls ----->\n");
     if (argc > 1)
     {
         // assume second argument is a file or directory
         if (argv[1][0] != '/')
         {
-            getcwd(dirbuff);
-            printf("<----- new filename: %s ----->\n", dirbuff);
+            getcwd(dirnamebuff);
         }
-        strcat(dirbuff, argv[1]);
 
-        printf("<----- past recreate filename: %s ----->\n", dirbuff);
-        stat(dirbuff, &current);
-        
-        printf("<----- past ls stat, isdir: %d ----->\n",
-            S_ISDIR(current.st_mode));
-        
-        printf("dir: %d\nlink: %d\nreg: %d\n\n",
-            S_ISDIR(current.st_mode),
-            S_ISLNK(current.st_mode),
-            S_ISREG(current.st_mode)
-        );
+        strcat(dirnamebuff, argv[1]);
+        stat(dirnamebuff, &current);
     
         if (S_ISDIR(current.st_mode) == true)
         {
-            lsDir(dirbuff);
+            lsDir(dirnamebuff);
         }
         else
         {
-            printf("<----- call lsfile ----->\n");
-            lsFile(dirbuff);
+            lsFile(dirnamebuff);
         }
+    }
+    else
+    {
+        getcwd(dirnamebuff);
+        lsDir(dirnamebuff);
     }
 }
 
-void lsFile(char * filename)
+void lsFile(char* filename)
 {
     char permissions[10] = "wrxwrxwrx";
     char type = '-';
+    char temp[256];
+    STAT current;
+
+    //printf("file to check: %s", filename);
     stat(filename, &current);
     u16 mode = current.st_mode;
 
-    printf("<----- past lsfile stat ----->\n");
     if (S_ISDIR(mode)) type = 'd';
     if (S_ISLNK(mode)) type = 'l';
 
@@ -62,36 +57,65 @@ void lsFile(char * filename)
         }
     }
 
-    printf("<----- past set permissions string ----->\n");
     char *file = filename, *next = findNextDelim(filename, "/");
-    while(next != '\0')
+
+    while(*next != '\0')
     {
         next++;
         file = next;
         next = findNextDelim(next, "/");
     }
-    printf("<----- file: %s ----->\n", file);
-
-    u16 links = current.st_nlink;
-    u16 owner = current.st_uid;
-    u16 group = current.st_gid;
-    long date = current.st_mtime; 
-    u32 size = current.st_size;
-    printf("<----- setup for printf ----->\n");
     
-    printf("%c%s\t%d\t%d\t%d\t%d\t%s",
+    printf(
+        "%c%s\t%d\t%d\t%d\t%d\t%s",
         type,
         permissions,
-        links,
-        owner,
-        group,
-        size,
-        file);
-    
-    printf("<----- done ----->\n");
+        current.st_nlink,
+        current.st_uid,
+        current.st_gid,
+        current.st_size,
+        file
+    );
+
+    if (type == 'l')
+    {
+        readlink(filename, temp);
+        printf("->%s", temp);
+    }
+
+    mputc('\n');
 }
 
 void lsDir(char * dirname)
 {
-    printf("<---------- LSDIR: NOT IMPLEMENTED YET!!! ---------->\n");
+    char dirnamebuff[4096];
+    u8 direntbuff[1024];
+    FileDesc directory = open(dirname, O_RDONLY);
+    DIR *dirent;
+    u8 *dirptr;
+
+    int bytesread = read(directory, direntbuff, 1024);
+    while(bytesread > 0)
+    {
+        dirent = (DIR *)direntbuff;
+        dirptr = (u8 *)direntbuff;
+
+        while (dirptr < direntbuff + 1024)
+        {
+            strcpy(dirnamebuff, dirname);
+
+            if (dirnamebuff[strlen(dirname) - 1] != '/')
+            {
+                strcat(dirnamebuff, "/");
+            }
+
+            strncat(dirnamebuff, dirent->name, dirent->name_len);
+            lsFile(dirnamebuff);
+
+            dirptr += dirent->rec_len;
+            dirent = (DIR *)dirptr;
+        }
+
+        bytesread = read(directory, direntbuff, 1024);
+    }
 }

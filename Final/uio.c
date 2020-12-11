@@ -58,7 +58,8 @@ typedef struct stat {
   long   st_dtime;
   long   st_date;
   long   st_time;
-} STAT;
+}
+STAT;
 
 /**************************************************************************************\
 * Linux macro definitions for EXT2 file modes                                          *

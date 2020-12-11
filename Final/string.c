@@ -72,23 +72,35 @@ int strlen(const char *s) {
 	return n;
 }
 
-int strcat(char *s1, char *s2)
+int strcat(char *dest, char *src)
 {
-  while(*s1)
-    s1++;
-  while(*s2)
-    *s1++ = *s2++;
-  *s1 = 0;
+  while(*dest)
+    dest++;
+  while(*src)
+    *dest++ = *src++;
+  *dest = 0;
 }
 
-int strncpy(char *s1, char *s2, int n)
+int strncat(char *dest, char *src, int nchars)
 {
-  char *p = s1;
-  while(n && *s2){
-    *s1++ = *s2++;
+  while(*dest)
+    dest++;
+  while(*src != '\0' && nchars > 0)
+  {
+    *dest++ = *src++;
+    nchars--;
+  }
+  *dest = '\0';
+}
+
+int strncpy(char *dest, char *src, int n)
+{
+  char *p = dest;
+  while(n && *src){
+    *dest++ = *src++;
     n--;
   }
-  *s1 = 0;
+  *dest = 0;
   return (int)p;
 }
 
