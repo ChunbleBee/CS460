@@ -5,11 +5,12 @@
 void main(int argc, char* argv[])
 {
     ProcID Console, SerialPort0, SerialPort1, Process;
-    FileDesc In, Out;
+    FileDesc In, Out, Err;
     int Status;
 
     In = open("/dev/tty0", O_RDONLY);
     Out = open("/dev/tty0", O_WRONLY);
+    Err = open("/dev/tty0", O_RDWR);
 
     Console = fork();
 

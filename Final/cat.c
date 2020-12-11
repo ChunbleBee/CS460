@@ -7,16 +7,18 @@ char catline[1024];
 int main(int argc, char* argv[])
 {
     int bytesread;
-    bool isTerm;
+    bool fromTerm, inTerm;
 
     gettty(tty);
     stat(tty, &myst);
+    fstat(stdin, &st0);
     fstat(stdout, &st1);
 
-    isTerm = (st1.st_ino == myst.st_ino);
+    fromTerm = (st0.st_ino == myst.st_ino);
+    inTerm = (st1.st_ino == myst.st_ino);
 
     // there's a file
-    if (isTerm == false || argc > 1)
+    if (inTerm == false || argc > 1)
     {
         FileDesc file;
         if (argc > 1)
@@ -30,15 +32,20 @@ int main(int argc, char* argv[])
         
         bytesread = read(file, catline, 1024);
 
-        while(bytesread > 0)
+        while (bytesread > 0)
         {
-            if (isTerm)
+            for (int i = 0; i < bytesread; i++)
             {
-                prints(catline);
-            }
-            else
-            {
-                write(stdout, catline, bytesread);
+                write(stdout, &catline[i], 1);
+
+                if (catline[i] == '\n' &&
+                    i > 1 &&
+                    catline[i-1] != '\n' &&
+                    catline[i-1] != '\r' &&
+                    inTerm == true)
+                {
+                    write(stdout, "\r", 1);
+                }
             }
 
             bytesread = read(file, catline, 1024);

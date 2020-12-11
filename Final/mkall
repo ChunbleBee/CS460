@@ -10,6 +10,10 @@ echo "-------------- Compiling all files --------------"
 ./mku cat
 ./mku ls
 ./mku more
+./mku grep
+./mku cp
+./mku l2u
+./mku u2l
 
 echo "-------------- Starting Qemu --------------"
 ./run

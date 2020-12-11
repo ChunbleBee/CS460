@@ -3,20 +3,9 @@
 #include "TypesAndDefs.h"
 #include "ucode.c"
 
-// typedef enum __ASSOCIATIVITY__ {left, right} Associativity;
-
-// typedef struct __OPNODE__
-// {
-//     char* opstring;
-//     OpNode *left;
-//     OpNode *right;
-//     Associativity assoc;
-// }
-// OpNode;
-
 int main(int argc, char* argv[])
 {
-    signal(2,1);
+    signal(2, 1);
 
     int pid, status;
     char line[1024], temp[1024];
@@ -36,6 +25,7 @@ int main(int argc, char* argv[])
         if (p == CHILDPROCESS)
         {
             InterpretLine(line);
+            exit(getpid());
         }
         else
         {
@@ -54,6 +44,13 @@ void InterpretLine(char* line)
     if (*next != '\0')
     {
         printf("<--- pipe opened! --->\n");
+        char *end = next - 1;
+        while(*end == ' ')
+        {
+            *end = '\0';
+            end--;
+        }
+        printf("cmd = %s\n", cmd);
 
         *next = '\0';
         next++;
@@ -64,21 +61,22 @@ void InterpretLine(char* line)
 
         FileDesc pipes[2];
         pipe(pipes);
-        ProcID childID = fork();  //child process, childID = 0
-                                // parent rocess, childID = procid of child
+        ProcID childID = fork();
+    
         if (childID == CHILDPROCESS)
         {
+            printf("process ID: %d\n", getpid());
             close(stdout);
-            dup(pipes[stdout]);
+            dup2(pipes[stdout], stdout);
             close(pipes[stdin]);
         }
         else
         {
             close(stdin);
-            dup(pipes[stdin]);
+            dup2(pipes[stdin], stdin);
             close(pipes[stdout]);
-            wait(&childID);
             InterpretLine(next);
+            wait(&childID);
             exit(0);
         }
     }
@@ -111,7 +109,7 @@ void InterpretLine(char* line)
             if (append == true)
             {
                 redirect++;
-                flags = (O_WRONLY | O_APPEND);
+                flags = (O_WRONLY | O_APPEND | O_CREAT);
             }
 
             while(*redirect == ' ')
@@ -137,5 +135,4 @@ void InterpretLine(char* line)
     
     //printf("<--- EXECUTE --->\n");
     int output = exec(cmd);
-    exit(0);
 }

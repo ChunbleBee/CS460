@@ -10,19 +10,22 @@ int main(int argc, char* argv[])
 
     char pathbuff[4096];
     char *filename = argv[1];
-    bool isTerm;
-    
-    if (argc < 2)
-    {
-        printf("syntax: more [file]");
-        exit(0);
-    }
+    bool fromTerm, toTerm;
 
     gettty(tty);
     stat(tty, &myst);
+    fstat(stdin, &st0);
     fstat(stdout, &st1);
 
-    isTerm = (st1.st_ino == myst.st_ino);
+    fromTerm = (st0.st_ino == myst.st_ino);
+    toTerm = (st1.st_ino == myst.st_ino);
+    
+    if (argc < 2 && fromTerm == false)
+    {
+        printf("syntax: more [file]");
+        exit(1);
+    }
+
     if (filename[0] != '/')
     {
         getcwd(pathbuff);
@@ -30,7 +33,16 @@ int main(int argc, char* argv[])
 
     strcat(pathbuff, filename);
 
-    FileDesc file = open(pathbuff, O_RDONLY);
+    FileDesc file;
+    if (argc > 1)
+    {
+        file = open(pathbuff, O_RDONLY);
+    }
+    else
+    {
+        file = stdin;
+    }
+    
     if (file < 0)
     {
         printf("Failed to open file!");
@@ -44,7 +56,6 @@ int main(int argc, char* argv[])
 
     while(bytesread > 0)
     {
-        prints("             \r");
         while(toPrint > 0 && bytesread > 0)
         {
             for (; i < bytesread && toPrint > 0; i++)
@@ -62,20 +73,24 @@ int main(int argc, char* argv[])
                 bytesread = read(file, linebuff, 1024);
             }
         }
-        prints("  <-- More -->\r");
 
-        char c = getc();
-        if (c == '\r')
+        if (toTerm == true)
         {
-            toPrint = 1;
-        }
-        else if (c == ' ' || c == 'a' || c == 'd')
-        {
-            toPrint = FILL;
-        }
+            prints("  <-- More -->\r");
+            char c = getc();
 
-        // clear the more print
-        prints("                      \r"); 
+            if (c == '\r')
+            {
+                toPrint = 1;
+            }
+            else if (c == ' ' || c == 'a' || c == 'd')
+            {
+                toPrint = FILL;
+            }
+
+            // clear the more print
+            prints("                      \r"); 
+        }
     }
 
     getc();
